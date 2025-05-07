@@ -1,7 +1,7 @@
 import React, { useState, memo } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/solid';
 
-// Memoize BackgroundBubbles để tránh re-render khi trạng thái thay đổi
+// Ghi nhớ BackgroundBubbles để tránh re-render khi trạng thái thay đổi
 const BackgroundBubbles = memo(() => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -33,16 +33,16 @@ const AdminLogin = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log('Email:', email, 'Password:', password);
+    console.log('Email:', email, 'Mật khẩu:', password);
     setTimeout(() => setIsLoading(false), 1500);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Background gradient */}
+      {/* Gradient nền */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-700 to-pink-600 opacity-95"></div>
 
-      {/* Background bubbles */}
+      {/* Bubbles nền */}
       <BackgroundBubbles />
 
       {/* Form đăng nhập */}
@@ -64,9 +64,9 @@ const AdminLogin = () => {
             </svg>
           </div>
           <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">
-            Admin Portal
+            Cổng thông tin Quản trị
           </h2>
-          <p className="text-gray-600 mt-2">Enter your credentials to continue</p>
+          <p className="text-gray-600 mt-2">Nhập thông tin của bạn để tiếp tục</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -95,7 +95,7 @@ const AdminLogin = () => {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              Mật khẩu
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -145,13 +145,13 @@ const AdminLogin = () => {
                 className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                Remember me
+                Ghi nhớ tôi
               </label>
             </div>
 
             <div className="text-sm">
               <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
-                Forgot password?
+                Quên mật khẩu?
               </a>
             </div>
           </div>
@@ -185,16 +185,16 @@ const AdminLogin = () => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Signing in...
+                Đang đăng nhập...
               </>
             ) : (
-              'Sign In'
+              'Đăng Nhập'
             )}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>© {new Date().getFullYear()} Admin Portal. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Cổng thông tin Quản trị. Bảo lưu mọi quyền.</p>
         </div>
       </div>
 
