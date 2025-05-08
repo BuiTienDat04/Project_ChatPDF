@@ -30,75 +30,73 @@ const Navigation = () => {
           <Link
             to="/chat"
             className="relative text-gray-600 hover:text-pink-600 transition-all duration-300 hover:scale-105
-             before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
-             before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
+              before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
+              before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
           >
             Trò chuyện
           </Link>
           <Link
             to="/pdf-chat" // Assuming this is the path for Chat PDF
             className="relative text-gray-600 hover:text-pink-600 transition-all duration-300 hover:scale-105
-             before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
-             before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
+              before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
+              before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
           >
             Chat PDF
           </Link>
           <Link
             to="/wisebase" // Assuming a path for Wisebase
             className="relative text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-105
-             before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
-             before:bg-gradient-to-r before:from-purple-400 before:to-purple-600 before:transition-all before:duration-300 hover:before:w-full"
+              before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
+              before:bg-gradient-to-r before:from-purple-400 before:to-purple-600 before:transition-all before:duration-300 hover:before:w-full"
           >
             Wisebase
           </Link>
           <Link
             to="/tools" // Assuming a path for Tools
             className="relative text-gray-600 hover:text-pink-600 transition-all duration-300 hover:scale-105
-             before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
-             before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
+              before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
+              before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
           >
             Công cụ
           </Link>
           <Link
             to="/extensions" // Assuming a path for Extensions
             className="relative text-gray-600 hover:text-pink-600 transition-all duration-300 hover:scale-105
-             before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
-             before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
+              before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
+              before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
           >
             Sự mở rộng
           </Link>
           <Link
             to="/customers" // Assuming a path for Customers
             className="relative text-gray-600 hover:text-pink-600 transition-all duration-300 hover:scale-105
-             before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
-             before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
+              before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
+              before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
           >
             Khách hàng
           </Link>
           <Link
             to="/pricing"
             className="relative text-gray-600 hover:text-pink-600 transition-all duration-300 hover:scale-105
-             before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
-             before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
+              before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-0 before:h-0.5
+              before:bg-gradient-to-r before:from-pink-400 before:to-pink-600 before:transition-all before:duration-300 hover:before:w-full"
           >
             Định giá
           </Link>
         </nav>
       </div>
 
-      {/* Right Section - User Avatar */}
+      {/* Right Section - Login Button */}
       <div className="flex items-center space-x-4">
-        <div className="relative group">
-          <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center
-             text-white font-semibold text-lg cursor-pointer transition-transform duration-200 hover:scale-110 shadow-md">
-            H {/* User initial */}
-          </div>
-          {/* Tooltip */}
-          <span className="absolute -bottom-7 right-0 bg-gray-800 text-white text-sm px-3 py-1 rounded-md
-             border border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-            Tài khoản
-          </span>
-        </div>
+        {/* Added Login Button */}
+        <Link
+          to="/login" // Link đến trang đăng nhập của bạn
+          className="px-5 py-2 bg-gray-900 text-white font-semibold rounded-full shadow-md
+                     transition-all duration-300 hover:bg-gray-700 hover:scale-105 focus:outline-none focus:ring-2
+                     focus:ring-gray-500 focus:ring-opacity-50"
+        >
+          Đăng nhập
+        </Link>
       </div>
     </header>
   );
