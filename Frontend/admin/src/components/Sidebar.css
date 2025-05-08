@@ -1,74 +1,82 @@
 .sidebar {
-    width: 250px;
-    background-color: #343a40;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    color: #ffffff;
-  }
+  width: 250px;
+  background-color: #343a40;
+  color: #fff;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: sticky; 
+  top: 0; 
+  left: 0;
+  overflow-y: auto; 
+}
 
-  .user-profile {
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #555;
-  }
+.user-profile {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
-  .username-display {
-    font-weight: bold;
-    font-size: 1.1em;
-  }
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
 
-  .sidebar-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
+.sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+}
 
-  .sidebar-nav li {
-    margin-bottom: 10px;
-    padding: 5px 0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
+.sidebar-nav li {
+  margin-bottom: 10px;
+}
 
-  .sidebar-nav li:hover {
-      background-color: #495057;
-      border-radius: 4px;
-  }
+.nav-link {
+  color: #ced4da;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 4px;
+  white-space: nowrap; /* Prevents text and icon from wrapping */
+}
 
+.nav-link:hover {
+  background-color: #495057;
+  color: #fff;
+}
 
-  .nav-link {
-    text-decoration: none;
-    color: #ced4da;
-    font-size: 1em;
-    display: block;
-    transition: color 0.3s ease;
-  }
+.nav-icon {
+  margin-right: 8px;
+  font-size: 1.2em;
+  flex-shrink: 0; /* Prevents icon from shrinking */
+}
 
-  .nav-link:hover {
-    color: #ffffff;
-  }
+.sidebar-footer {
+  margin-top: auto;
+}
 
-  .sidebar-footer {
-    margin-top: auto;
-    padding-top: 20px;
-    border-top: 1px solid #555;
-  }
+.logout-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap; /* Prevents text and icon from wrapping */
+}
 
-  .logout-button {
-    width: 100%;
-    padding: 10px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease;
-  }
+.logout-button:hover {
+  background-color: #c82333;
+}
 
-  .logout-button:hover {
-    background-color: #c82333;
-  }
+.button-icon {
+  margin-right: 8px;
+  font-size: 1.2em;
+  flex-shrink: 0; /* Prevents icon from shrinking */
+}

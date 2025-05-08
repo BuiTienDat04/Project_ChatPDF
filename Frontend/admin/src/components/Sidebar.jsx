@@ -1,11 +1,12 @@
 import React from 'react';
+import { FaTachometerAlt, FaComments, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
 import './Sidebar.css';
 
 const Sidebar = ({ user, onLogout }) => {
   const defaultUser = {
-      name: 'Người dùng',
-      email: 'email@example.com',
-      avatarUrl: 'https://via.placeholder.com/40'
+    name: 'Người dùng',
+    email: 'email@example.com',
+    avatarUrl: 'https://via.placeholder.com/40'
   };
 
   const currentUser = user || defaultUser;
@@ -35,21 +36,34 @@ const Sidebar = ({ user, onLogout }) => {
       <nav className="sidebar-nav">
         <ul>
           <li>
-            <a href="/dashboard" className="nav-link">Bảng điều khiển</a>
+            <a href="/dashboard" className="nav-link">
+              <FaTachometerAlt className="nav-icon" />
+              Bảng điều khiển
+            </a>
           </li>
           <li>
-            <a href="/chat-management" className="nav-link">Quản lý trò chuyện</a>
+            <a href="/account-management" className="nav-link">
+              <FaUserCog className="nav-icon" />
+              Quản lý tài khoản
+            </a>
+          </li>
+          <li>
+            <a href="/chat-management" className="nav-link">
+              <FaComments className="nav-icon" />
+              Quản lý trò chuyện
+            </a>
           </li>
         </ul>
       </nav>
 
       <div className="sidebar-footer">
         <button onClick={onLogout} className="logout-button">
+          <FaSignOutAlt className="button-icon" />
           Đăng xuất
         </button>
       </div>
     </aside>
   );
-}
+};
 
 export default Sidebar;
