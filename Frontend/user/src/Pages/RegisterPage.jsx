@@ -1,12 +1,20 @@
 import React from 'react';
 import { FaGoogle, FaApple, FaTrophy, FaTimes } from 'react-icons/fa';
 
-const RegisterModal = ({ onClose }) => {
+const RegisterModal = ({ onClose, onSwitchToLogin }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Overlay mờ */}
+      <div 
+        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
       
       {/* Nội dung modal */}
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 hover:scale-100">
+      <div 
+        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 hover:scale-100"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Nút đóng */}
         <button
           onClick={onClose}
@@ -60,9 +68,15 @@ const RegisterModal = ({ onClose }) => {
           {/* Liên kết đăng nhập */}
           <p className="mt-6 text-center text-gray-600">
             Đã có tài khoản?{' '}
-            <a href="/login" className="font-semibold text-purple-600 hover:text-purple-700 transition-colors">
+            <button
+              onClick={() => {
+                onClose();
+                onSwitchToLogin();
+              }}
+              className="font-semibold text-purple-600 hover:text-purple-700 transition-colors focus:outline-none"
+            >
               Đăng nhập ngay
-            </a>
+            </button>
           </p>
         </div>
       </div>

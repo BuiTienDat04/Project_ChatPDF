@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Brain, User } from 'lucide-react';
 import LoginModal from './LoginPage'; 
-import RegisterPage from './RegisterPage';
+import RegisterModal from './RegisterPage';
 
 const Navigation = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -62,16 +62,16 @@ const Navigation = () => {
           }} 
         />
       )}
-
-      {/* Register Modal - Sử dụng RegisterPage */}
+      
+      {/* Register Modal */}
       {showRegister && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-            onClick={() => setShowRegister(false)}
-          />
-          <RegisterPage onClose={() => setShowRegister(false)} />
-        </div>
+        <RegisterModal 
+          onClose={() => setShowRegister(false)}
+          onSwitchToLogin={() => {
+            setShowRegister(false);
+            setShowLoginModal(true);
+          }}
+        />
       )}
     </>
   );

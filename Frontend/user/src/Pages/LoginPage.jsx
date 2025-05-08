@@ -7,6 +7,7 @@ const LoginModal = ({ onClose, onShowRegister }) => {
       {/* Overlay mờ */}
       <div 
         className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
       />
       
       {/* Nội dung modal */}
@@ -78,7 +79,7 @@ const LoginModal = ({ onClose, onShowRegister }) => {
             ))}
           </div>
 
-          {/* Liên kết đăng ký - Đã sửa thành button */}
+          {/* Liên kết đăng ký */}
           <p className="mt-6 text-center text-gray-600">
             Chưa có tài khoản?{' '}
             <button
