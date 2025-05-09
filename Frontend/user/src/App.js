@@ -2,10 +2,13 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ChatPDFPage from "./Pages/ChatPDFPage";
 import UpfilePDF from "./Pages/UpfilePDF";
-import Navigation from "./Pages/Navigation";
+import Navigation from "./components/Navigation";
 import TranslatePDF from "./Pages/TranslatePDF"
 import LoginPage from "./Pages/LoginPage"
 import RegisterPage from "./Pages/RegisterPage"
+import Footer from "./components/Footer";
+import PricingPage from "./Pages/PricingPage";
+
 export default function App() {
   return (
     // BrowserRouter enables client-side routing
@@ -18,6 +21,8 @@ export default function App() {
         <Route path="/translatepdf" element={<TranslatePDF />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/footer" element={<Footer />} />
+        <Route path="/pricing" element={< PricingPage />} />
 
         
 
