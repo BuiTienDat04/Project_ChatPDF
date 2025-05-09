@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Brain, User } from 'lucide-react';
-import LoginModal from './LoginPage'; 
-import RegisterModal from './RegisterPage';
+import LoginModal from '../Pages/LoginPage'; 
+import RegisterModal from '../Pages/RegisterPage';
 
 const Navigation = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
