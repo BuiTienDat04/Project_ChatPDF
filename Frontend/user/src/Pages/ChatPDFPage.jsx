@@ -1,7 +1,8 @@
 import React from 'react';
 import { FileText, FilePen, BarChart, Upload, ChevronUp } from 'lucide-react';
 import UpfilePDF from './UpfilePDF';
-import Navigation from './Navigation';
+import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
 
 export default function ChatPDFPage() {
   return (
@@ -27,6 +28,8 @@ export default function ChatPDFPage() {
           <ChevronUp className="text-purple-700" />
         </button>
       </div>
+
+      <Footer/>
     </div>
   );
 }
