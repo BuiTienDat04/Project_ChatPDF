@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaTachometerAlt, FaComments, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
-import './Sidebar.css';
+import './sidebar.css';
 
 const Sidebar = ({ user, onLogout }) => {
   const defaultUser = {
