@@ -1,20 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Brain } from 'lucide-react';
 import LoginModal from '../Pages/LoginPage';
 import RegisterModal from '../Pages/RegisterPage';
+import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../api/api';
 
-const Navigation = () => {
+const Navigation = ({ user, onLogout }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Giả lập trạng thái đã đăng nhập
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const navigate = useNavigate();
 
-  // Giả lập thông tin người dùng (ảnh avatar)
-  const user = {
-    name: 'Nguyễn Văn A',
-    avatar: 'https://i.pravatar.cc/40' // ảnh demo
+  const dropdownTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const userIsLoggedIn = !!user;
+    setIsLoggedIn(userIsLoggedIn);
+  }, [user]);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (response.ok) {
+        navigate('/', { replace: true });
+      } else {
+        console.error('Backend logout failed:', data.message || 'Unknown error');
+        alert('Đăng xuất thất bại từ server: ' + (data.message || 'Lỗi không xác định.'));
+      }
+    } catch (error) {
+      console.error('Lỗi đăng xuất:', error);
+      alert('Đăng xuất thất bại do lỗi mạng.');
+    } finally {
+      if (onLogout) {
+        onLogout();
+      }
+      setShowDropdown(false);
+      setIsLoggedIn(false);
+    }
   };
+
+  const handleMouseEnter = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+    setShowDropdown(true);
+  };
+
+  const handleMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setShowDropdown(false);
+    }, 200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current);
+      }
+    };
+  }, []);
+
 
   return (
     <>
@@ -61,7 +112,6 @@ const Navigation = () => {
           </nav>
         </div>
 
-        {/* Right Section */}
         <div className="flex items-center space-x-4 relative">
           {!isLoggedIn ? (
             <button
@@ -73,22 +123,35 @@ const Navigation = () => {
               Đăng nhập
             </button>
           ) : (
-            <div className="relative">
+            <div
+              className="relative flex items-center space-x-2"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
               <img
-                src={user.avatar}
+                src={user?.avatar}
                 alt="User Avatar"
                 className="w-10 h-10 rounded-full cursor-pointer border-2 border-pink-200 hover:border-purple-400 transition duration-300"
                 onClick={() => setShowDropdown(prev => !prev)}
               />
+              <span className="text-gray-800 font-medium text-sm hidden md:inline">
+                 {user?.name}
+              </span>
+
 
               {showDropdown && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-pink-100 shadow-xl rounded-md z-20">
-                  <div className="px-4 py-2 text-sm text-purple-600 border-b border-pink-100">{user.name}</div>
+                <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-pink-100 shadow-xl rounded-md z-20">
+                  {/* Hiển thị tên người dùng ở đầu dropdown */}
+                  <div className="px-4 py-2 text-sm text-purple-600 border-b border-pink-100">
+                    {user?.name}
+                  </div>
                   <button
-                    onClick={() => {
-                      setIsLoggedIn(false); // Xử lý đăng xuất
-                      setShowDropdown(false);
-                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-purple-50 hover:text-purple-600 transition"
+                  >
+                    Hồ sơ
+                  </button>
+                  <button
+                    onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-sm text-pink-500 hover:bg-pink-50 hover:text-purple-600 transition"
                   >
                     Đăng xuất
@@ -100,7 +163,6 @@ const Navigation = () => {
         </div>
       </header>
 
-      {/* Modals */}
       {showLoginModal && (
         <LoginModal
           onClose={() => setShowLoginModal(false)}

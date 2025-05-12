@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('../config/passport');
-const { ensureAuthenticated, checkRole } = require('../middlewares/auth'); 
+const { ensureAuthenticated, checkRole } = require('../middlewares/auth');
 
 router.get(
   '/google',
   passport.authenticate('google', {
-    scope: ['profile', 'email', 'https://www.googleapis.com/auth/user.birthday.read', 'https://www.googleapis.com/auth/user.addresses.read']
+    scope: ['profile', 'email', 'https://www.googleapis.com/auth/user.birthday.read']
   })
 );
 
@@ -26,7 +26,7 @@ router.get(
           console.error('Login error:', err.message);
           return res.status(500).json({ error: 'Login failed', details: err.message });
         }
-        const redirectUrl = user.role === 'admin' ? '/dashboard' : '/translatepdf';
+        const redirectUrl = user.role === 'admin' ? '/dashboard' : '/';
         return res.redirect(`${process.env.FRONTEND_URL}${redirectUrl}`);
       });
     })(req, res, next);
@@ -40,7 +40,7 @@ router.get('/user', ensureAuthenticated, (req, res) => {
 // API Logout
 router.get('/logout', (req, res) => {
   req.logout((err) => {
- if (err) {
+    if (err) {
       console.error('Logout error:', err.message);
       return res.status(500).json({ message: 'Logout error', details: err.message });
     }
