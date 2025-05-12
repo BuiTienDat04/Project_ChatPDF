@@ -1,24 +1,32 @@
 const pdfParse = require('pdf-parse');
-const visionClient = require('../config/googleVision');
-const { saveTempFile, deleteTempFile } = require('../utils/fileUtils');
+const { extractImagesFromPDF } = require('../utils/pdfImageExtractor');
 
-// Đổi tên function
 async function analyzePDF(pdfBuffer) {
-  const tempFilePath = await saveTempFile(pdfBuffer);
-  
   try {
-    const pdfData = await pdfParse(pdfBuffer);
-    let fullText = pdfData.text;
-
-    if (fullText.trim().length < 100) {
-      const visionText = await extractTextWithVision(tempFilePath);
-      fullText += '\n--- [Vision Extracted Text] ---\n' + visionText;
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error('Empty PDF buffer received');
     }
 
-    return fullText;
-  } finally {
-    await deleteTempFile(tempFilePath);
+    // Phân tích song song để tăng hiệu suất
+    const [pdfData, images] = await Promise.all([
+      pdfParse(pdfBuffer),
+      extractImagesFromPDF(pdfBuffer).catch(() => []) // Nếu lỗi vẫn tiếp tục với images rỗng
+    ]);
+
+    return {
+      success: true,
+      text: pdfData.text,
+      images: images || [],
+      metadata: {
+        ...pdfData.metadata,
+        pageCount: pdfData.numpages
+      }
+    };
+  } catch (error) {
+    console.error('Error in PDF analysis:', error);
+    throw error;
   }
 }
 
-module.exports = { analyzePDF }; // ✅ Export đúng tên
+// Export chính xác tên hàm
+module.exports = { analyzePDF };

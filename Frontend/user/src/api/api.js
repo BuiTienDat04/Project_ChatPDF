@@ -1,10 +1,7 @@
-// src/api/api.js
-
 export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 
 const ApiService = {
-  // Gửi file PDF đến backend để phân tích
-  analyzePDF: async (file) => {
+  analyzePDF: async (file, onProgress) => {
     const formData = new FormData();
     formData.append('pdf', file);
 
@@ -12,11 +9,11 @@ const ApiService = {
       const response = await fetch(`${API_BASE_URL}/api/analyze-pdf`, {
         method: 'POST',
         body: formData,
-        // headers sẽ được tự động thiết lập bởi browser khi dùng FormData
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       return await response.json();
@@ -25,11 +22,18 @@ const ApiService = {
       throw error;
     }
   },
-
-  // Có thể thêm các API calls khác ở đây
-  // Ví dụ:
-  // getUserFiles: async (userId) => { ... },
-  // saveTranslation: async (fileId, translation) => { ... },
+  
+  // Thêm hàm để lấy hình ảnh từ PDF
+  getPDFImages: async (fileId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-images/${fileId}`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting PDF images:', error);
+      throw error;
+    }
+  }
 };
 
 export default ApiService;

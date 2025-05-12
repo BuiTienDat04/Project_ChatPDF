@@ -3,7 +3,7 @@ const multer = require('multer');
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 50 * 1024 * 1024, // Tăng lên 50MB
+    fileSize: 50 * 1024 * 1024, // 50MB
     files: 1
   },
   fileFilter: (req, file, cb) => {
