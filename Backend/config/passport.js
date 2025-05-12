@@ -43,24 +43,6 @@ passport.use(
           }
         }
 
-        // Xử lý địa chỉ
-        let address = null;
-        if (person.data.addresses && person.data.addresses.length > 0) {
-          address = person.data.addresses[0].formattedValue;
-          console.log('Address found:', address);
-        } else {
-          console.log('No address available for this user. Checking raw data:', person.data.addresses);
-        }
-
-        // Xử lý số điện thoại (kiểm tra xem có không)
-        let phoneNumber = null;
-        if (person.data.phoneNumbers && person.data.phoneNumbers.length > 0) {
-          phoneNumber = person.data.phoneNumbers[0].value;
-          console.log('Phone number found:', phoneNumber);
-        } else {
-          console.log('No phone number available for this user');
-        }
-
         // Tìm hoặc tạo user trong database
         let user = await User.findOne({ googleId: profile.id });
         if (!user) {
@@ -70,15 +52,11 @@ passport.use(
             fullName: profile.displayName || 'Unknown',
             picture: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : '',
             birthday: birthday,
-            address: address,
-            phoneNumber: phoneNumber
           });
           await user.save();
           console.log('New user saved:', user);
         } else {
           user.birthday = birthday || user.birthday;
-          user.address = address || user.address;
-          user.phoneNumber = phoneNumber || user.phoneNumber;
           await user.save();
           console.log('User updated:', user);
         }
