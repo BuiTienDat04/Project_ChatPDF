@@ -2,18 +2,41 @@
 const express = require('express');
 const pdfRoutes = require('./routes/pdfRoutes');
 const cors = require('./config/cors'); // Import cấu hình CORS
+const session = require('express-session');
+const passport = require('./config/passport');
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const adminRoutes = require('./routes/admin');
+require('dotenv').config();
 
 const app = express();
+
+// Kết nối MongoDB
+connectDB();
 
 // Middleware quan trọng
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Sử dụng CORS từ file config
 app.use(cors);
 
 // Sử dụng routes
 app.use('/api', pdfRoutes);
+app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
+app.use('/admin', adminRoutes);
 
 // Xử lý lỗi cuối cùng
 app.use((err, req, res, next) => {
