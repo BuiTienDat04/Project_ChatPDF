@@ -14,7 +14,8 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameFileId, setRenameFileId] = useState(null);
   const [newFileName, setNewFileName] = useState('');
-
+const [pdfImages, setPdfImages] = useState([]);
+const [pdfMetadata, setPdfMetadata] = useState(null);
   // Refs
   const historyRef = useRef(null);
   const menuRefs = useRef([]);
@@ -48,43 +49,60 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
 
   // Handle file processing with backend API
   const handleFileProcessing = async (file) => {
-    if (!file || !isValidFileType(file)) return;
-    if (isUploading) return;
+  if (!file || !isValidFileType(file)) return;
+  if (isUploading) return;
 
-    setSelectedFile(file);
-    setIsUploading(true);
+  setSelectedFile(file);
+  setIsUploading(true);
+  setUploadProgress(0);
+
+  try {
+    const result = await ApiService.analyzePDF(file);
+    
+    // Tạo entry mới với đầy đủ thông tin
+    const newFileEntry = {
+      id: Date.now() + Math.random().toString(36).substring(2, 9),
+      name: file.name,
+      uploadDate: new Date().toISOString(),
+      content: result.text || result.originalText,
+      images: result.images || [],
+      metadata: {
+        ...result.metadata,
+        fileInfo: {
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified
+        }
+      },
+      pages: result.pages || [
+        {
+          pageNumber: 1,
+          content: result.text || result.originalText,
+          dimensions: result.dimensions
+        }
+      ]
+    };
+
+    updateFileHistory(newFileEntry);
+    setPdfImages(result.images || []);
+    setPdfMetadata(result.metadata || null);
+
+    navigate('/translatepdf', { 
+      state: { 
+        file: newFileEntry,
+        images: result.images,
+        metadata: result.metadata
+      } 
+    });
+  } catch (error) {
+    console.error('Processing error:', error);
+    alert(`Error: ${error.message}`);
+  } finally {
+    setIsUploading(false);
     setUploadProgress(0);
-
-    try {
-      // Simulate progress (replace with actual progress events if needed)
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
-      }, 300);
-
-      // Send to backend API
-      const result = await ApiService.analyzePDF(file, progressEvent => {
-        const progress = Math.round((progressEvent.loaded / progressEvent.total) * 90);
-        setUploadProgress(progress);
-      });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      // Create new file entry
-      const newFileEntry = createFileEntry(file, result);
-      updateFileHistory(newFileEntry);
-
-      // Navigate to translation page
-      navigate('/translatepdf', { state: { file: newFileEntry } });
-    } catch (error) {
-      console.error('Processing error:', error);
-      alert(`Error: ${error.response?.data?.error || error.message}`);
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
-      setSelectedFile(null);
-    }
-  };
+    setSelectedFile(null);
+  }
+};
 
   // Helper functions
   const isValidFileType = (file) => {
