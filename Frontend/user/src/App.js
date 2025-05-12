@@ -8,6 +8,7 @@ import LoginPage from "./Pages/LoginPage"
 import RegisterPage from "./Pages/RegisterPage"
 import Footer from "./components/Footer";
 import PricingPage from "./Pages/PricingPage";
+import ChatBotPage from "./Pages/ChatBotPage";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/footer" element={<Footer />} />
         <Route path="/pricing" element={< PricingPage />} />
+        <Route path="/chatbot" element={<ChatBotPage />} />
 
         
 

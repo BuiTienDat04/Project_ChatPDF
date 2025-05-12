@@ -18,25 +18,46 @@ const Navigation = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full z-10 flex items-center justify-between px-6 md:px-8 py-4 bg-white shadow-md border-b border-gray-200">
+      <header className="fixed top-0 left-0 w-full z-10 flex items-center justify-between px-6 md:px-8 py-4 bg-gradient-to-r from-pink-50 to-purple-50 shadow-lg border-b border-pink-100">
         <div className="flex items-center space-x-8">
           <Link to="/" className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105">
-            <div className="relative overflow-hidden p-2 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 shadow-md">
+            <div className="relative overflow-hidden p-2 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 shadow-md">
               <Brain size={32} className="text-white transition-transform duration-500 group-hover:rotate-[360deg]" />
             </div>
-            <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
               Sider
             </span>
           </Link>
 
           <nav className="hidden md:flex space-x-8 text-base font-medium">
-            <Link to="/chat" className="nav-link">Trò chuyện</Link>
-            <Link to="/pdf-chat" className="nav-link">Chat PDF</Link>
-            <Link to="/wisebase" className="nav-link text-purple-600 hover:text-purple-800">Wisebase</Link>
-            <Link to="/tools" className="nav-link">Công cụ</Link>
-            <Link to="/extensions" className="nav-link">Sự mở rộng</Link>
-            <Link to="/customers" className="nav-link">Khách hàng</Link>
-            <Link to="/pricing" className="nav-link">Định giá</Link>
+            <Link to="/chatbot" className="relative text-black hover:text-pink-500 transition-colors duration-300 group">
+              Trò chuyện
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
+            </Link>
+            <Link to="/pdf-chat" className="relative text-black hover:text-pink-500 transition-colors duration-300 group">
+              Chat PDF
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
+            </Link>
+            <Link to="/wisebase" className="relative text-black hover:text-purple-600 transition-colors duration-300 group">
+              Wisebase
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
+            </Link>
+            <Link to="/tools" className="relative text-black hover:text-pink-500 transition-colors duration-300 group">
+              Công cụ
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
+            </Link>
+            <Link to="/extensions" className="relative text-black hover:text-pink-500 transition-colors duration-300 group">
+              Sự mở rộng
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
+            </Link>
+            <Link to="/customers" className="relative text-black hover:text-pink-500 transition-colors duration-300 group">
+              Khách hàng
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
+            </Link>
+            <Link to="/pricing" className="relative text-black hover:text-pink-500 transition-colors duration-300 group">
+              Định giá
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
+            </Link>
           </nav>
         </div>
 
@@ -45,9 +66,9 @@ const Navigation = () => {
           {!isLoggedIn ? (
             <button
               onClick={() => setShowLoginModal(true)}
-              className="px-5 py-2 bg-gray-900 text-white font-semibold rounded-full shadow-md
-                transition-all duration-300 hover:bg-gray-700 hover:scale-105 focus:outline-none focus:ring-2
-                focus:ring-gray-500 focus:ring-opacity-50"
+              className="px-5 py-2 bg-gradient-to-r from-pink-400 to-purple-500 text-white font-semibold rounded-full shadow-md
+                transition-all duration-300 hover:from-pink-500 hover:to-purple-600 hover:scale-105 focus:outline-none focus:ring-2
+                focus:ring-pink-300 focus:ring-opacity-50"
             >
               Đăng nhập
             </button>
@@ -56,19 +77,19 @@ const Navigation = () => {
               <img
                 src={user.avatar}
                 alt="User Avatar"
-                className="w-10 h-10 rounded-full cursor-pointer border-2 border-gray-300 hover:border-purple-500 transition"
+                className="w-10 h-10 rounded-full cursor-pointer border-2 border-pink-200 hover:border-purple-400 transition duration-300"
                 onClick={() => setShowDropdown(prev => !prev)}
               />
 
               {showDropdown && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 shadow-lg rounded-md z-20">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b">{user.name}</div>
+                <div className="absolute right-0 mt-2 w-40 bg-white border border-pink-100 shadow-xl rounded-md z-20">
+                  <div className="px-4 py-2 text-sm text-purple-600 border-b border-pink-100">{user.name}</div>
                   <button
                     onClick={() => {
                       setIsLoggedIn(false); // Xử lý đăng xuất
                       setShowDropdown(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    className="w-full text-left px-4 py-2 text-sm text-pink-500 hover:bg-pink-50 hover:text-purple-600 transition"
                   >
                     Đăng xuất
                   </button>
