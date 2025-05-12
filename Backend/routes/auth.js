@@ -37,11 +37,23 @@ router.get('/user', ensureAuthenticated, (req, res) => {
   res.json(req.user);
 });
 
+// API Logout
 router.get('/logout', (req, res) => {
   req.logout((err) => {
-    if (err) return res.status(500).json({ message: 'Logout error' });
-    res.json({ message: 'Logged out' });
+ if (err) {
+      console.error('Logout error:', err.message);
+      return res.status(500).json({ message: 'Logout error', details: err.message });
+    }
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destroy error:', err.message);
+        return res.status(500).json({ message: 'Session destroy error', details: err.message });
+      }
+      res.clearCookie('connect.sid'); // Xóa cookie session
+      res.json({ message: 'Logged out successfully' });
+    });
   });
 });
+
 
 module.exports = router;

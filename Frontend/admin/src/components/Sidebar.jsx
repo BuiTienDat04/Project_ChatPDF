@@ -1,12 +1,36 @@
 import React from 'react';
 import { FaTachometerAlt, FaComments, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../api/api';
 import './sidebar.css';
 
 const Sidebar = ({ user, onLogout }) => {
+  const navigate = useNavigate(); 
   const defaultUser = {
     name: 'Người dùng',
     email: 'email@example.com',
     avatarUrl: 'https://via.placeholder.com/40'
+  };
+
+    const handleLogout = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (response.ok) {
+        if (onLogout) {
+          onLogout();
+        }
+        navigate('/', { replace: true });
+      } else {
+        alert('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Logout failed');
+    }
   };
 
   const currentUser = user || defaultUser;
@@ -57,7 +81,7 @@ const Sidebar = ({ user, onLogout }) => {
       </nav>
 
       <div className="sidebar-footer">
-        <button onClick={onLogout} className="logout-button">
+        <button onClick={handleLogout} className="logout-button">
           <FaSignOutAlt className="button-icon" />
           Đăng xuất
         </button>

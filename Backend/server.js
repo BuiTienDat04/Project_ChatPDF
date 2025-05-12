@@ -1,4 +1,5 @@
 // server.js
+require('dotenv').config();
 const express = require('express');
 const pdfRoutes = require('./routes/pdfRoutes');
 const cors = require('./config/cors'); // Import cấu hình CORS
@@ -24,6 +25,11 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: false, 
+      httpOnly: true,
+      sameSite: 'lax',
+    },
   })
 );
 app.use(passport.initialize());
@@ -31,6 +37,7 @@ app.use(passport.session());
 
 // Sử dụng CORS từ file config
 app.use(cors);
+app.options('*', cors);
 
 // Sử dụng routes
 app.use('/api', pdfRoutes);
