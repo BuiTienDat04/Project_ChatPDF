@@ -85,7 +85,7 @@ const Navigation = ({ user, onLogout }) => {
               Trò chuyện
               <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
             </Link>
-            <Link to="/pdf-chat" className="relative text-black hover:text-pink-500 transition-colors duration-300 group">
+            <Link to="/chatpdf" className="relative text-black hover:text-pink-500 transition-colors duration-300 group">
               Chat PDF
               <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-500 group-hover:w-full transition-all duration-300 ease-in-out"></span>
             </Link>

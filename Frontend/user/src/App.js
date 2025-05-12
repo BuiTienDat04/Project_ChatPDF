@@ -11,6 +11,7 @@ import RegisterPage from "./Pages/RegisterPage";
 import Footer from "./components/Footer";
 import PricingPage from "./Pages/PricingPage";
 import ChatBotPage from "./Pages/ChatBotPage";
+import HomePage from "./Pages/HomePage"
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -65,6 +66,7 @@ export default function App() {
       <Routes>
         {/* Truyền cả currentUser và setCurrentUser cho ChatPDFPage */}
         <Route path="/" element={<ChatPDFPage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+        <Route path="/chatpdf" element={<ChatPDFPage />} />
         <Route path="upfilepdf" element={<UpfilePDF />} />
         <Route path="/translatepdf" element={<TranslatePDF />} />
         {/* Truyền setCurrentUser cho LoginPage để cập nhật state sau khi login truyền thống */}
@@ -72,6 +74,9 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/pricing" element={< PricingPage />} />
         <Route path="/chatbot" element={<ChatBotPage />} />
+        <Route path="/" element={<HomePage />} />
+
+        
       </Routes>
 
       <Footer />
