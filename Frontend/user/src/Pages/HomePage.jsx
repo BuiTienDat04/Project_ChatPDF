@@ -7,10 +7,9 @@ import { MessageCircle, FileText, Globe, Star, Zap, BookOpen, Rocket } from 'luc
 const HomePage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-100 font-sans">
-            <Navigation />
-
+            
             <main className="pt-20 w-full relative z-10">
-                {/* Hero Section */}
+                <Navigation />
                 {/* Hero Section */}
                 <section className="relative flex flex-col items-center text-center px-4 py-24 md:py-32 overflow-hidden bg-gradient-to-br from-pink-50 to-purple-100">
                     {/* Background Blob */}
@@ -200,7 +199,6 @@ const HomePage = () => {
                     </div>
                 </section>
 
-        
 
                 {/* ChatPDF Demo Section */}
                 <section className="py-20 px-4 bg-gradient-to-r from-pink-100 to-purple-200">
