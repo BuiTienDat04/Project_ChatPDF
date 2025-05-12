@@ -9,6 +9,7 @@ import RegisterPage from "./Pages/RegisterPage"
 import Footer from "./components/Footer";
 import PricingPage from "./Pages/PricingPage";
 import ChatBotPage from "./Pages/ChatBotPage";
+import HomePage from "./Pages/HomePage"
 
 export default function App() {
   return (
@@ -16,7 +17,7 @@ export default function App() {
     <BrowserRouter>
       {/* Routes is a container for defining routes */}
       <Routes>
-        <Route path="/" element={<ChatPDFPage />} />
+        <Route path="/chatpdf" element={<ChatPDFPage />} />
         <Route path="upfilepdf" element={<UpfilePDF />} />
         <Route path="navigation" element={<Navigation />} />
         <Route path="/translatepdf" element={<TranslatePDF />} />
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/footer" element={<Footer />} />
         <Route path="/pricing" element={< PricingPage />} />
         <Route path="/chatbot" element={<ChatBotPage />} />
+        <Route path="/" element={<HomePage />} />
 
         
 
