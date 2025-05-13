@@ -1,7 +1,6 @@
 const { PDFDocument } = require('pdf-lib');
 const sharp = require('sharp');
-const { getDocument } = require('pdfjs-dist');
-const { TextContent } = require('pdfjs-dist/types/display/api');
+const { getDocument } = require('pdfjs-dist/legacy/build/pdf');
 
 // Kiểm tra header PDF
 function validatePDFHeader(buffer) {
@@ -26,7 +25,7 @@ function validatePDFBuffer(buffer) {
 
 // Trích xuất văn bản có cấu trúc
 async function extractTextWithStructure(pdfBuffer) {
-  const pdf = await getDocument(pdfBuffer).promise;
+  const pdf = await getDocument({ data: pdfBuffer }).promise;
   let fullText = '';
   const paragraphs = [];
   let currentParagraph = '';
@@ -92,7 +91,7 @@ async function extractImagesFromPDF(pdfBuffer) {
               pageNumber: i + 1,
               name,
               data: optimizedImage.toString('base64'),
-              type: 'image/jpeg', // Luôn chuyển sang JPEG
+              type: 'image/jpeg',
               dimensions: { width: image.width, height: image.height },
               sizeKB: Math.round(optimizedImage.length / 1024)
             };
@@ -106,7 +105,6 @@ async function extractImagesFromPDF(pdfBuffer) {
       }
     }
     
-    // Xử lý song song tất cả ảnh
     const results = await Promise.all(imageProcessingPromises);
     return results.filter(img => img !== null);
     

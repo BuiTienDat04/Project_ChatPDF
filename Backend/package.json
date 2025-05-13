@@ -29,8 +29,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "googleapis": "^148.0.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.2",
     "multer": "^1.4.5-lts.2",
@@ -38,8 +40,8 @@
     "passport-google-oauth20": "^2.0.0",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
-    "pdfjs-dist": "^5.2.133",
-    "sharp": "^0.34.1",
+    "pdfjs-dist": "^2.16.105",
+    "sharp": "^0.33.2",
     "url": "^0.11.4",
     "whatwg-url": "^14.2.0"
   }
