@@ -1,11 +1,8 @@
-// config/cors.js
 const cors = require('cors');
 
-const corsOptions = {
- origin: process.env.FRONTEND_URL, 
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
-  credentials: true, 
+module.exports = cors({
+  origin: 'http://localhost:3000', // Cho phép frontend tại cổng 3000
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
-module.exports = cors(corsOptions);
+  credentials: true
+});
