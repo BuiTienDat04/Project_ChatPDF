@@ -10,20 +10,52 @@ console.log('Loading pdfService.js, cMapUrl:', path.join(__dirname, '../../node_
  * @param {string} text - Đoạn văn bản cần kiểm tra
  * @param {number} fontSize - Kích thước font
  * @param {number} avgFontSize - Kích thước font trung bình của trang
+ 
+* @param {PDFDocumentProxy} pdf 
+ * @returns {Promise<boolean>} 
  */
-function isHeading(text, fontSize, avgFontSize) {
-  // Nếu font size lớn hơn trung bình đáng kể
-  if (fontSize > avgFontSize * 1.2) return true;
-  
-  // Nếu độ dài ngắn và bắt đầu bằng số (ví dụ: "1. Introduction")
-  if (text.length < 100 && /^\d+[.)]\s+\w+/.test(text)) return true;
-  
-  // Nếu toàn bộ là chữ HOA và không quá dài
-  if (text === text.toUpperCase() && text.length < 100 && text.length > 3) return true;
-  
+async function hasImages(pdf) {
+  for (let i = 1; i <= pdf.numPages; i++) {
+    try {
+      const page = await pdf.getPage(i);
+      const ops = await page.getOperatorList();
+      // Kiểm tra các toán tử liên quan đến hình ảnh
+      const hasInline = ops.fnArray.includes(pdfjs.OPS.paintInlineImage) ||
+                        ops.fnArray.includes(pdfjs.OPS.paintImageXObject) ||
+                        ops.fnArray.includes(pdfjs.OPS.paintJpegXObject);
+      // Kiểm tra tài nguyên XObject
+      const resources = page.commonObjs.resources || {};
+      const xObjects = resources.XObject || {};
+      const hasXObject = Object.values(xObjects).some(obj => obj.Subtype?.value === 'Image');
+      if (hasInline || hasXObject) {
+        console.log(`Found images on page ${i}`);
+        return true;
+      }
+    } catch (err) {
+      console.warn(`Error checking images on page ${i}: ${err.message}`);
+    }
+  }
+  console.log('No embedded images found in PDF');
   return false;
 }
+// Cải thiện hàm isHeading()
+function isHeading(text, fontSize, avgFontSize, index, totalItems) {
+  text = text.trim();
+  if (!text) return false;
 
+  // Tiêu đề thường có font size lớn hơn trung bình HOẶC là dòng đầu tiên của trang
+  const isLargerFont = fontSize > avgFontSize * 1.2;
+  const isFirstLine = index < 3;
+
+  // Tiêu đề có thể bắt đầu bằng số hoặc chữ in hoa
+  const isNumbered = /^\d+[.)]\s+/.test(text);
+  const isUppercase = text === text.toUpperCase() && text.length < 100;
+
+  // Tiêu đề thường ngắn và không chứa dấu câu cuối dòng
+  const isShort = text.length < 150 && !/[.,;!?]$/.test(text);
+
+  return isLargerFont || isFirstLine || isNumbered || (isUppercase && isShort);
+}
 /**
  * Phân tích PDF và trích xuất nội dung
  * @param {Buffer} pdfBuffer - Buffer của file PDF 
@@ -34,7 +66,7 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
   let warnings = [];
 
   try {
-    // Sử dụng phương thức cải tiến để trích xuất văn bản có cấu trúc
+    // Trích xuất văn bản có cấu trúc
     let structuredText;
     try {
       structuredText = await extractTextWithStructure(pdfBuffer);
@@ -53,67 +85,62 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
       cMapPacked: true,
     }).promise;
 
-    let content = { 
-      sections: [], 
-      pages: [], 
-      text: structuredText.text || '', 
-      paragraphs: structuredText.paragraphs || [] 
+    let content = {
+      sections: [],
+      pages: [],
+      text: structuredText.text || '',
+      paragraphs: structuredText.paragraphs || [],
     };
-    
+
     let images = [];
 
-    // Trích xuất ảnh bằng module cải tiến
+    // Trích xuất ảnh
     try {
       console.log('Starting image extraction...');
       const extractedImages = await extractImagesFromPDF(pdfBuffer);
       console.log(`Successfully extracted ${extractedImages.length} images`);
-      
-      // Ghi log về nguồn gốc của các ảnh để debug
+
       const sourceCounts = extractedImages.reduce((acc, img) => {
         acc[img.source] = (acc[img.source] || 0) + 1;
         return acc;
       }, {});
       console.log('Image sources:', sourceCounts);
-      
-      // Lọc ảnh quá nhỏ (có thể là biểu tượng, bullets, v.v.)
-      const filteredImages = extractedImages.filter(img => 
-        img.dimensions && (img.dimensions.width > 50 && img.dimensions.height > 50)
+
+      const filteredImages = extractedImages.filter(img =>
+        img.dimensions && (img.dimensions.width > 30 && img.dimensions.height > 30) // Giảm từ 50px -> 30px
       );
-      
+
       if (filteredImages.length < extractedImages.length) {
         console.log(`Filtered out ${extractedImages.length - filteredImages.length} small images`);
       }
-      
-      // Map images sang định dạng cần thiết
+
       images = filteredImages.map(img => ({
-        data: img.data, // base64 string
+        data: img.data,
         width: img.dimensions?.width || 0,
         height: img.dimensions?.height || 0,
         x: 0,
         y: 0,
         page: img.pageNumber,
         source: img.source || 'unknown',
-        sizeKB: img.sizeKB || 0
+        sizeKB: img.sizeKB || 0,
       }));
-      
-      // Giới hạn số lượng ảnh nếu cần
+
       if (images.length > maxImagesPerPage * pdf.numPages) {
         images = images.slice(0, maxImagesPerPage * pdf.numPages);
         console.log(`Limited images to ${images.length} (${maxImagesPerPage} per page)`);
       }
-      
+
       console.log(`Final images count: ${images.length}`);
     } catch (imgError) {
       warnings.push(`Failed to extract images: ${imgError.message}`);
       console.error('Image extraction error:', imgError);
     }
 
-    // Xử lý từng trang để phân tích cấu trúc chi tiết
+    // Xử lý từng trang
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       try {
-        const { pageSections } = await processPage(pdf, pageNum);
+        const { pageSections } = await processPage(pdf, pageNum, structuredText);
 
-        // Lọc ảnh thuộc trang hiện tại
         const pageImages = images.filter(img => img.page === pageNum);
 
         content.pages.push({
@@ -126,8 +153,7 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
       } catch (pageError) {
         console.error(`Error processing page ${pageNum}:`, pageError);
         warnings.push(`Error on page ${pageNum}: ${pageError.message}`);
-        
-        // Vẫn thêm trang với thông báo lỗi
+
         content.pages.push({
           pageNumber: pageNum,
           sections: [{ type: 'error', content: `Error: ${pageError.message}`, page: pageNum }],
@@ -136,15 +162,29 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
       }
     }
 
-    // Nếu việc xử lý trang gặp vấn đề, nhưng đã trích xuất được văn bản có cấu trúc,
-    // sử dụng văn bản đó để tạo các phần
+    // Fallback nếu sections vẫn rỗng
     if (content.sections.length === 0 && structuredText.paragraphs.length > 0) {
       console.log('Using structured text to create sections');
-      content.sections = structuredText.paragraphs.map((para, index) => ({
-        type: isHeading(para, 14, 12) ? 'heading' : 'text',
-        content: para,
-        page: Math.floor(index / (structuredText.paragraphs.length / pdf.numPages)) + 1
-      }));
+      content.sections = structuredText.paragraphs.map((para, index) => {
+        const page = Math.floor(index / (structuredText.paragraphs.length / pdf.numPages)) + 1;
+        return {
+          type: isHeading(para, 14, 12, index, structuredText.paragraphs.length) ? 'heading' : 'text',
+          content: para,
+          page: page,
+        };
+      });
+
+      // Tạo lại pages từ sections
+      content.pages = [];
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const pageSections = content.sections.filter(section => section.page === pageNum);
+        const pageImages = images.filter(img => img.page === pageNum);
+        content.pages.push({
+          pageNumber: pageNum,
+          sections: pageSections,
+          images: pageImages,
+        });
+      }
     }
 
     const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
@@ -165,30 +205,29 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
   } catch (error) {
     console.error('PDF processing error:', error);
     const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
-    
+
     warnings.push(`Error processing PDF: ${error.message}`);
     return {
       success: false,
       content: { text: '', sections: [], paragraphs: [], pages: [] },
       images: [],
-      metadata: { 
-        processingTime: processingTime, 
-        pages: 0, 
-        imageCount: 0, 
-        containsText: false, 
-        containsImages: false 
+      metadata: {
+        processingTime: processingTime,
+        pages: 0,
+        imageCount: 0,
+        containsText: false,
+        containsImages: false,
       },
       warnings: warnings,
     };
   }
 }
-
 /**
  * Xử lý một trang PDF để trích xuất các phần cấu trúc
  * @param {PDFDocumentProxy} pdf - Tài liệu PDF
  * @param {number} pageNum - Số trang cần xử lý
  */
-async function processPage(pdf, pageNum) {
+async function processPage(pdf, pageNum, structuredText) {
   let warnings = [];
   let pageSections = [];
 
@@ -198,21 +237,27 @@ async function processPage(pdf, pageNum) {
 
     console.log(`Text content items on page ${pageNum}:`, textContent.items.length);
 
-    if (textContent.items.length === 0) {
+    // Lấy paragraphs từ structuredText cho trang hiện tại
+    const pageParagraphs = structuredText.paragraphs.filter((para, idx) => {
+      const paraPage = Math.floor(idx / (structuredText.paragraphs.length / pdf.numPages)) + 1;
+      return paraPage === pageNum;
+    });
+
+    if (textContent.items.length === 0 && pageParagraphs.length === 0) {
       warnings.push(`No text content extracted from page ${pageNum}`);
       pageSections.push({ type: 'text', content: 'No text extracted', page: pageNum });
     } else {
       // Sắp xếp theo vị trí Y (từ trên xuống dưới)
       textContent.items.sort((a, b) => b.transform[5] - a.transform[5]);
-      
+
       // Tính font size trung bình
       const fontSizes = textContent.items
         .map(item => item.height || 0)
         .filter(size => size > 0);
-      
-      const avgFontSize = fontSizes.length ? 
-        fontSizes.reduce((sum, size) => sum + size, 0) / fontSizes.length : 12;
-      
+      const avgFontSize = fontSizes.length
+        ? fontSizes.reduce((sum, size) => sum + size, 0) / fontSizes.length
+        : 12;
+
       let currentSection = { type: 'text', content: '', page: pageNum };
       let lastFontSize = 0;
       let lastY = null;
@@ -224,15 +269,15 @@ async function processPage(pdf, pageNum) {
 
         const fontSize = item.height || 12;
         const currentY = item.transform[5];
-        
+
         // Phát hiện khoảng cách dòng
         if (lastY !== null) {
           const spacing = Math.abs(lastY - currentY);
           if (spacing > 0) lineSpacing = Math.max(lineSpacing, spacing);
         }
         lastY = currentY;
-        
-        // Xác định section mới dựa vào font size và khoảng cách
+
+        // Xác định section mới
         const isLargerFont = fontSize > Math.max(lastFontSize * 1.2, avgFontSize * 1.1);
         const hasLargeSpacing = lastY !== null && Math.abs(lastY - currentY) > lineSpacing * 1.5;
         const isNewSection = isLargerFont || hasLargeSpacing || index === 0;
@@ -242,20 +287,20 @@ async function processPage(pdf, pageNum) {
           currentSection = { type: 'text', content: '', page: pageNum };
         }
 
-        // Xử lý các loại section khác nhau
-        if (isNewSection && isHeading(text, fontSize, avgFontSize)) {
+        // Phân loại section
+        if (isNewSection && isHeading(text, fontSize, avgFontSize, index, textContent.items.length)) {
           if (currentSection.content.trim()) pageSections.push({ ...currentSection });
           pageSections.push({ type: 'heading', content: text, page: pageNum });
           currentSection = { type: 'text', content: '', page: pageNum };
         } else if (/^\s*[-•⋅●◦⦿⚫⚪⭐➤➢➔➜]\s/.test(text)) {
-          // Phát hiện danh sách từ các ký tự bullet
+          // Phát hiện danh sách bullet
           if (!currentSection.content || currentSection.type !== 'list') {
             if (currentSection.content.trim()) pageSections.push({ ...currentSection });
             currentSection = { type: 'list', items: [], content: '', page: pageNum };
           }
           currentSection.items = currentSection.items || [];
           currentSection.items.push(text.replace(/^\s*[-•⋅●◦⦿⚫⚪⭐➤➢➔➜]\s/, '').trim());
-        } else if (/^\s*\d+[.)]\s/.test(text)) {
+        } else if (/^\s*\d+(\.\d+)*[.)]\s/.test(text)) {
           // Phát hiện danh sách số
           if (currentSection.type !== 'numbered_list') {
             if (currentSection.content.trim() || (currentSection.items && currentSection.items.length)) {
@@ -264,24 +309,20 @@ async function processPage(pdf, pageNum) {
             currentSection = { type: 'numbered_list', items: [], content: '', page: pageNum };
           }
           currentSection.items = currentSection.items || [];
-          currentSection.items.push(text.replace(/^\s*\d+[.)]\s/, '').trim());
+          currentSection.items.push(text.replace(/^\s*\d+(\.\d+)*[.)]\s/, '').trim());
         } else {
-          // Nội dung văn bản thông thường
+          // Văn bản thông thường
           if (currentSection.type === 'list' || currentSection.type === 'numbered_list') {
             if (text.length < 50) {
-              // Đây có thể là continuation của item cuối cùng
               const lastItem = currentSection.items[currentSection.items.length - 1];
               if (lastItem) {
                 currentSection.items[currentSection.items.length - 1] = lastItem + ' ' + text;
                 return;
               }
             }
-            // Nếu không phải continuation, tạo section mới
             pageSections.push({ ...currentSection });
             currentSection = { type: 'text', content: '', page: pageNum };
           }
-          
-          // Thêm EOL nếu cần
           currentSection.content += text + (item.hasEOL ? '\n' : ' ');
         }
 
@@ -292,11 +333,10 @@ async function processPage(pdf, pageNum) {
       if (currentSection.content?.trim() || (currentSection.items && currentSection.items.length > 0)) {
         pageSections.push({ ...currentSection });
       }
-      
+
       // Hợp nhất các đoạn text liên tiếp
       const mergedSections = [];
       let lastSection = null;
-      
       for (const section of pageSections) {
         if (lastSection && lastSection.type === 'text' && section.type === 'text') {
           lastSection.content += '\n\n' + section.content;
@@ -305,18 +345,26 @@ async function processPage(pdf, pageNum) {
           lastSection = { ...section };
         }
       }
-      
       if (lastSection) mergedSections.push(lastSection);
       pageSections = mergedSections;
+
+      // Nếu pageSections rỗng, sử dụng pageParagraphs từ structuredText
+      if (pageSections.length === 0 && pageParagraphs.length > 0) {
+        pageSections = pageParagraphs.map((para, idx) => ({
+          type: isHeading(para, 14, 12, idx, pageParagraphs.length) ? 'heading' : 'text',
+          content: para,
+          page: pageNum,
+        }));
+      }
     }
 
     return { pageSections, warnings };
   } catch (error) {
     console.error(`Error processing page ${pageNum}:`, error);
     warnings.push(`Error processing page ${pageNum}: ${error.message}`);
-    return { 
+    return {
       pageSections: [{ type: 'error', content: `Error: ${error.message}`, page: pageNum }],
-      warnings
+      warnings,
     };
   }
 }
