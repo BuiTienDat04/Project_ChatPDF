@@ -75,12 +75,12 @@ async function extractTextWithStructure(pdfBuffer) {
       useSystemFonts: true,
       cMapUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/cmaps/'),
       cMapPacked: true,
-      ignoreErrors: true, // Bỏ qua lỗi font TrueType
+      ignoreErrors: true,
     }).promise;
 
     let fullText = '';
     const paragraphs = [];
-    const pool = new PromisePool(Math.min(os.cpus().length, 8)); // Tối đa 8 trang đồng thời
+    const pool = new PromisePool(Math.min(os.cpus().length, 8));
     const pageResults = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -89,32 +89,38 @@ async function extractTextWithStructure(pdfBuffer) {
           const page = await withRetry(() => pdf.getPage(i));
           const textContent = await withRetry(() => page.getTextContent());
           const pageItems = [...textContent.items];
-          pageItems.sort((a, b) => b.transform[5] - a.transform[5]);
+          pageItems.sort((a, b) => b.transform[5] - a.transform[5]); // Sắp xếp từ trên xuống dưới
 
           let pageParagraphs = [];
           let pageText = '';
-          let pageCurrentParagraph = '';
-          let pageLastYPosition = null;
+          let currentParagraph = '';
+          let lastYPosition = null;
+          let lineSpacing = 0;
 
-          pageItems.forEach((item) => {
+          pageItems.forEach((item, index) => {
             const text = item.str.trim();
             if (!text) return;
-            const currentY = item.transform[5];
 
-            if (pageLastYPosition !== null && Math.abs(pageLastYPosition - currentY) > 10) {
-              if (pageCurrentParagraph.trim()) {
-                pageParagraphs.push(pageCurrentParagraph.trim());
-                pageText += pageCurrentParagraph.trim() + '\n\n';
-                pageCurrentParagraph = '';
+            const currentY = item.transform[5];
+            if (lastYPosition !== null) {
+              const spacing = Math.abs(lastYPosition - currentY);
+              if (spacing > 0) lineSpacing = Math.max(lineSpacing, spacing);
+            }
+            lastYPosition = currentY;
+
+            if (lastYPosition && Math.abs(lastYPosition - currentY) > lineSpacing * 1.5) {
+              if (currentParagraph.trim()) {
+                pageParagraphs.push(currentParagraph.trim());
+                pageText += currentParagraph.trim() + '\n\n';
+                currentParagraph = '';
               }
             }
-            pageCurrentParagraph += text + ' ';
-            pageLastYPosition = currentY;
+            currentParagraph += text + ' ';
           });
 
-          if (pageCurrentParagraph.trim()) {
-            pageParagraphs.push(pageCurrentParagraph.trim());
-            pageText += pageCurrentParagraph.trim() + '\n\n';
+          if (currentParagraph.trim()) {
+            pageParagraphs.push(currentParagraph.trim());
+            pageText += currentParagraph.trim() + '\n\n';
           }
 
           return {
@@ -145,7 +151,7 @@ async function extractTextWithStructure(pdfBuffer) {
 
     return {
       text: fullText,
-      paragraphs,
+      paragraphs: paragraphs.filter(p => p.length > 0), // Loại bỏ các đoạn rỗng
       pages: pdf.numPages,
     };
   } catch (error) {
@@ -163,7 +169,7 @@ async function extractImagesFromPDF(pdfBuffer, extractTextFromImages = false) {
   try {
     pdfDoc = await withRetry(() => PDFDocument.load(pdfBuffer, { ignoreEncryption: true, throwOnInvalidObject: false }));
   } catch (err) {
-    console.error("Error loading PDF with pdf-lib:", err);
+    console.error('Error loading PDF with pdf-lib:', err);
     throw new Error(`PDF loading error: ${err.message}`);
   }
 
@@ -181,7 +187,7 @@ async function extractImagesFromPDF(pdfBuffer, extractTextFromImages = false) {
   const images = [];
   let errors = [];
   let processedCount = 0;
-  const pool = new PromisePool(Math.min(os.cpus().length * 2, 16)); // Tăng tối đa 16 tác vụ đồng thời
+  const pool = new PromisePool(Math.min(os.cpus().length * 2, 16));
 
   // Trích xuất XObject (sử dụng pdf-lib)
   const xObjectExtractPromises = [];
@@ -200,7 +206,10 @@ async function extractImagesFromPDF(pdfBuffer, extractTextFromImages = false) {
           if (xObject?.Subtype?.value === 'Image') {
             try {
               const imageBytes = xObject.rawStream?.content || xObject.rawData;
-              if (!imageBytes || imageBytes.length === 0) continue;
+              if (!imageBytes || imageBytes.length === 0) {
+                console.warn(`No image data for XObject ${name} on page ${i + 1}`);
+                continue;
+              }
 
               const imageBuffer = Buffer.from(imageBytes);
               const optimizedImage = await withRetry(() =>
@@ -256,7 +265,10 @@ async function extractImagesFromPDF(pdfBuffer, extractTextFromImages = false) {
         for (let j = 0; j < inlineImages.length; j++) {
           try {
             const imageData = inlineImages[j];
-            if (!imageData || !imageData.data || imageData.data.length === 0) continue;
+            if (!imageData || !imageData.data || imageData.data.length === 0) {
+              console.warn(`No data for inline image ${j + 1} on page ${i}`);
+              continue;
+            }
 
             const imageBytes = Buffer.from(imageData.data);
             const optimizedImage = await withRetry(() =>
@@ -324,11 +336,11 @@ async function extractImagesFromPDF(pdfBuffer, extractTextFromImages = false) {
       console.log(`Processing chunk of pages: ${chunk.start}-${chunk.end}`);
       try {
         const fallbackImages = await extractPagesAsImages(pdfBuffer, extractTextFromImages, chunk.start, chunk.end);
-        if (fallbackImages.length === 0) {
-          console.error(`No images extracted for chunk ${chunk.start}-${chunk.end}, stopping fallback`);
-          break;
+        if (fallbackImages.length > 0) {
+          images.push(...fallbackImages);
+        } else {
+          console.warn(`No images extracted for chunk ${chunk.start}-${chunk.end}`);
         }
-        images.push(...fallbackImages);
       } catch (chunkError) {
         console.error(`Error processing chunk ${chunk.start}-${chunk.end}:`, chunkError);
         errors.push(`Chunk ${chunk.start}-${chunk.end} error: ${chunkError.message}`);
@@ -342,7 +354,7 @@ async function extractImagesFromPDF(pdfBuffer, extractTextFromImages = false) {
   }
 
   if (errors.length > 0) {
-    throw new Error(`Image extraction failed with errors: ${errors.join('; ')}`);
+    console.warn(`Image extraction completed with errors: ${errors.join('; ')}`);
   }
 
   return [];
@@ -356,7 +368,7 @@ async function extractPagesAsImages(pdfBuffer, extractText = false, startPage = 
     console.log(`Extracting pages ${startPage}-${endPage} as images`);
 
     const options = {
-      density: 100,
+      density: 150, // Tăng density để cải thiện chất lượng hình ảnh
       format: 'jpeg',
       width: 800,
       height: 800,
@@ -367,7 +379,7 @@ async function extractPagesAsImages(pdfBuffer, extractText = false, startPage = 
     let worker;
 
     if (extractText) {
-      worker = await createWorker({ lang: 'eng+vie' });
+      worker = await createWorker({ lang: 'eng+vie', logger: m => console.log(m) });
     }
 
     const pool = new PromisePool(Math.min(os.cpus().length, 8));
@@ -377,7 +389,7 @@ async function extractPagesAsImages(pdfBuffer, extractText = false, startPage = 
       pagePromises.push(pool.add(async () => {
         try {
           console.log(`Converting page ${i} to image`);
-          const pageResult = await withRetry(() => convert.convert(i)); // Sửa cách gọi pdf2pic
+          const pageResult = await withRetry(() => convert(i - 1, { responseType: 'base64' })); // Sửa cách gọi pdf2pic
 
           if (!pageResult || !pageResult.base64) {
             console.warn(`No image result for page ${i}`);
@@ -403,7 +415,7 @@ async function extractPagesAsImages(pdfBuffer, extractText = false, startPage = 
           if (extractText && worker) {
             const { data: { text } } = await withRetry(
               () => worker.recognize(Buffer.from(pageResult.base64, 'base64')),
-              1, // Giảm retry cho OCR
+              1,
               500
             );
             imageData.extractedText = text.trim();
