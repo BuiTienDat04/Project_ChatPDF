@@ -4,7 +4,6 @@ const upload = require('../middlewares/uploadMiddleware');
 const pdfController = require('../controllers/pdfController');
 const rateLimit = require('express-rate-limit');
 
-// Giới hạn 10 request mỗi phút
 const analysisLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 phút
   max: 10,
@@ -21,7 +20,6 @@ router.post('/analyze',
   pdfController.analyzePDF
 );
 
-// Endpoint kiểm tra sức khỏe
 router.get('/status', (req, res) => {
   res.json({ 
     status: 'operational',

@@ -40,8 +40,11 @@
     "passport-google-oauth20": "^2.0.0",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
+    "pdf-poppler": "^0.2.1",
+    "pdf2pic": "^3.1.4",
     "pdfjs-dist": "^2.16.105",
-    "sharp": "^0.33.2",
+    "sharp": "^0.33.5",
+    "tesseract.js": "^6.0.1",
     "url": "^0.11.4",
     "whatwg-url": "^14.2.0"
   }

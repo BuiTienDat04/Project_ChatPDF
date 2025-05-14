@@ -6,7 +6,7 @@ const ApiService = {
     formData.append('pdf', file);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/analyze-pdf`, {
+      const response = await fetch(`${API_BASE_URL}/api/analyze`, {
         method: 'POST',
         body: formData,
       });
@@ -22,8 +22,7 @@ const ApiService = {
       throw error;
     }
   },
-  
-  // Thêm hàm để lấy hình ảnh từ PDF
+
   getPDFImages: async (fileId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/pdf-images/${fileId}`);

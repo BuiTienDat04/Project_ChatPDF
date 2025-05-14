@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { FileText, FilePen, BarChart, Upload, ChevronUp } from 'lucide-react';
 import UpfilePDF from './UpfilePDF';
 import { API_BASE_URL } from '../api/api';
 
 export default function ChatPDFPage({ setCurrentUser }) {
-
   useEffect(() => {
     const fetchCurrentUser = async () => {
+      const token = localStorage.getItem('token'); // Lấy token từ localStorage
       try {
         const response = await fetch(`${API_BASE_URL}/auth/user`, {
           method: 'GET',
           credentials: 'include',
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+          },
         });
 
         if (response.ok) {
@@ -22,32 +25,34 @@ export default function ChatPDFPage({ setCurrentUser }) {
             localStorage.setItem('isAdmin', user.isAdmin);
             localStorage.setItem('userId', user._id);
             if (user.token) {
-                 localStorage.setItem('token', user.token);
+              localStorage.setItem('token', user.token);
             } else {
-                 localStorage.removeItem('token');
+              localStorage.removeItem('token');
             }
           }
         } else {
-          console.warn('Failed to fetch current user after redirect or on page load.');
+          console.warn('Failed to fetch current user. Status:', response.status);
           if (setCurrentUser) {
-             setCurrentUser(null);
+            setCurrentUser(null);
+          }
+          if (response.status === 401) {
+            console.log('Unauthorized, redirecting to login...');
+            // window.location.href = '/login'; // Chuyển hướng nếu cần
           }
         }
       } catch (error) {
-        console.error('Error fetching current user:', error);
-         if (setCurrentUser) {
-             setCurrentUser(null);
-         }
+        console.error('Error fetching current user:', error.message);
+        if (setCurrentUser) {
+          setCurrentUser(null);
+        }
       }
     };
 
     fetchCurrentUser();
-
   }, [setCurrentUser]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-100 to-white text-black font-sans">
-
       <section className="text-center py-12 mt-20">
         <h1 className="text-4xl font-bold">
           ChatPDF: Trò chuyện với <span className="bg-pink-300 px-2 rounded">nhiều PDF</span> trực tuyến
