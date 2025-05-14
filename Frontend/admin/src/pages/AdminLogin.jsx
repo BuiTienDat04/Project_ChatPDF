@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/solid';
+import { API_BASE_URL } from '../api/api';
 
 // Ghi nhớ BackgroundBubbles để tránh re-render khi trạng thái thay đổi
 const BackgroundBubbles = React.memo(() => {
@@ -29,7 +30,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:8080/auth/google'; // Chuyển hướng đến Google OAuth
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   return (

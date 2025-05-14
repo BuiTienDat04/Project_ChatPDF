@@ -9,12 +9,17 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
+const getUserRoutes = require('./routes/getUser');
 require('dotenv').config();
 
 const app = express();
 
 // Kết nối MongoDB
 connectDB();
+
+// Sử dụng CORS từ file config
+app.use(cors);
+app.options('*', cors);
 
 // Middleware quan trọng
 app.use(express.json());
@@ -35,15 +40,13 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Sử dụng CORS từ file config
-app.use(cors);
-app.options('*', cors);
 
 // Sử dụng routes
 app.use('/api', pdfRoutes);
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
+app.use('/api/users', getUserRoutes);
 
 // Xử lý lỗi cuối cùng
 app.use((err, req, res, next) => {
