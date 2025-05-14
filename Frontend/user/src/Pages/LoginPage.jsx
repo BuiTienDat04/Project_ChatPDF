@@ -5,7 +5,7 @@ import axios from 'axios';
 const LoginModal = ({ onClose, onShowRegister }) => {
   const handleGoogleLogin = () => {
     // Chuyển hướng đến endpoint Google OAuth
-    window.location.href = 'http://localhost:8080/auth/google';
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   return (

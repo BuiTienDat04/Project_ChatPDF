@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/sidebar';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import axios from 'axios';
+import { API_BASE_URL } from '../api/api';
+import { useNavigate } from 'react-router-dom';
 
 function ChatManagement() {
   const [users, setUsers] = useState([
@@ -11,6 +15,33 @@ function ChatManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [menuOpenIndex, setMenuOpenIndex] = useState(null);
 
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [loadingPage, setLoadingPage] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchLoggedInUser = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/auth/user`, { withCredentials: true });
+        if (response.status === 200) {
+          setLoggedInUser(response.data);
+        } else {
+          setLoggedInUser(null);
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy thông tin user đăng nhập trong ChatManagement:', error.response?.status, error.response?.data);
+        setLoggedInUser(null);
+        if (error.response && error.response.status === 401) {
+           console.warn('Phiên hết hạn khi lấy thông tin user trong ChatManagement. Chuyển hướng về trang đăng nhập.');
+           navigate('/admin-login');
+        }
+      } finally {
+          setLoadingPage(false);
+      }
+    };
+    fetchLoggedInUser();
+  }, [navigate]);
+
   const handleUserClick = (user) => {
     setSelectedUser(user);
     console.log('Đã chọn người dùng:', user);
@@ -20,14 +51,26 @@ function ChatManagement() {
     setSelectedUser(null);
   };
 
-  const currentUser = { name: 'Người dùng Quản trị' };
-  const handleLogout = () => {
-    console.log('Đang đăng xuất khỏi thành phần ChatManagement');
+  const handleLogout = async () => {
+    try {
+        await axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true });
+        setLoggedInUser(null);
+        localStorage.removeItem('currentUser');
+
+        navigate('/admin-login');
+    } catch (error) {
+        console.error('Lỗi khi đăng xuất từ ChatManagement:', error);
+        alert('Đăng xuất thất bại.');
+    }
   };
+
+  if (loadingPage) {
+      return <div className="flex min-h-screen w-full items-center justify-center">Đang tải trang quản lý chat...</div>;
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-white text-black font-sans">
-      <Sidebar username={currentUser.name} onLogout={handleLogout} />
+      <Sidebar user={loggedInUser} onLogout={handleLogout} />
 
       <main className="flex-grow overflow-y-auto p-6 bg-transparent">
         <div className="bg-gray-300 p-8 rounded-lg shadow-md mb-5">
