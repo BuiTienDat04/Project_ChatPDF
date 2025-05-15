@@ -1,4 +1,5 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
 const express = require('express');
 const pdfRoutes = require('./routes/pdfRoutes');
 const cors = require('./config/cors');
@@ -9,7 +10,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 const getUserRoutes = require('./routes/getUser');
-require('dotenv').config();
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api/users', getUserRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err.stack);

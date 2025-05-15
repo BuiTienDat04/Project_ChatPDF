@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaTachometerAlt, FaComments, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
+import { FaTachometerAlt, FaComments, FaSignOutAlt, FaUserCog, FaRegBell } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../api/api';
@@ -45,23 +45,25 @@ const Sidebar = ({ user, onLogout }) => {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/auth/logout`);
-      setCurrentUserDetails({
-        _id: null,
-        fullName: 'Người dùng',
-        email: 'email@example.com',
-        picture: 'https://via.placeholder.com/40'
-      });
-      localStorage.removeItem('currentUser');
-
-      if (onLogout) {
-        onLogout();
+      const response = await axios.get(`${API_BASE_URL}/auth/logout`, { withCredentials: true });
+      if (response.status === 200) {
+        setCurrentUserDetails({
+          _id: null,
+          fullName: 'Người dùng',
+          email: 'email@example.com',
+          picture: 'https://via.placeholder.com/40'
+        });
+        localStorage.removeItem('currentUser');
+        if (onLogout) {
+          onLogout();
+        }
+        navigate('/', { replace: true });
+      } else {
+        throw new Error(response.data.message || 'Đăng xuất thất bại');
       }
-      navigate('/', { replace: true });
-
     } catch (error) {
       console.error('Logout error:', error);
-      alert('Đăng xuất thất bại. Vui lòng thử lại.');
+      alert(`Đăng xuất thất bại: ${error.message || 'Vui lòng thử lại.'}`);
     }
   };
 
@@ -99,6 +101,13 @@ const Sidebar = ({ user, onLogout }) => {
               Quản lý trò chuyện
             </Link>
           </li>
+          <li>
+            <Link to="/subscrible-management" className="nav-link">
+              <FaRegBell className="nav-icon" /> 
+              Quản lý đăng ký
+            </Link>
+          </li>
+
         </ul>
       </nav>
 
