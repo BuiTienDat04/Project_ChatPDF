@@ -65,7 +65,7 @@ export default function App() {
 
       <Routes>
         {/* Truyền cả currentUser và setCurrentUser cho ChatPDFPage */}
-        <Route path="/" element={<ChatPDFPage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+        <Route path="/home" element={<HomePage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
         <Route path="/chatpdf" element={<ChatPDFPage />} />
         <Route path="upfilepdf" element={<UpfilePDF />} />
         <Route path="/translatepdf" element={<TranslatePDF />} />
@@ -74,7 +74,6 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/pricing" element={< PricingPage />} />
         <Route path="/chatbot" element={<ChatBotPage />} />
-        <Route path="/" element={<HomePage />} />
 
         
       </Routes>

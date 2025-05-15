@@ -5,29 +5,55 @@ const { ensureAuthenticated, checkRole } = require('../middlewares/auth');
 
 router.get(
   '/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email', 'https://www.googleapis.com/auth/user.birthday.read']
-  })
+  (req, res, next) => {
+    req.session.returnTo = req.query.origin || '/';
+
+    passport.authenticate('google', {
+      scope: [
+        'profile',
+        'email',
+        'https://www.googleapis.com/auth/user.birthday.read'
+      ]
+    })(req, res, next);
+  }
 );
 
 router.get(
   '/google/callback',
   (req, res, next) => {
     passport.authenticate('google', (err, user, info) => {
+      const originalUrl = req.session.returnTo;
+      delete req.session.returnTo;
+
       if (err) {
         console.error('Authentication error:', err.message);
-        return res.status(500).json({ error: 'Authentication failed', details: err.message });
+        return res.redirect(`${process.env.FRONTEND_URL}/error?msg=auth_failed`);
       }
       if (!user) {
-        return res.redirect(process.env.FRONTEND_URL);
+         return res.redirect(`${process.env.FRONTEND_URL}/login`);
       }
+
       req.logIn(user, (err) => {
         if (err) {
           console.error('Login error:', err.message);
-          return res.status(500).json({ error: 'Login failed', details: err.message });
+          return res.redirect(`${process.env.FRONTEND_URL}/error?msg=login_failed`);
         }
-        const redirectUrl = user.role === 'admin' ? '/dashboard' : '/';
-        return res.redirect(`${process.env.FRONTEND_URL}${redirectUrl}`);
+
+        let redirectPath;
+
+        if (originalUrl === '/home') {
+          redirectPath = '/chatpdf';
+        } else if (originalUrl === '/admin-login' && user.role === 'admin') {
+          redirectPath = '/dashboard';
+        } else {
+          redirectPath = originalUrl || '/home';
+        }
+
+        if (!redirectPath || !redirectPath.startsWith('/')) {
+            redirectPath = '/home' + (redirectPath || '');
+        }
+
+        return res.redirect(`${process.env.FRONTEND_URL}${redirectPath}`);
       });
     })(req, res, next);
   }
