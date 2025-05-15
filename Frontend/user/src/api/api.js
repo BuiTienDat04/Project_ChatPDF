@@ -3,7 +3,7 @@ export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localh
 const ApiService = {
   analyzePDF: async (file) => {
     const formData = new FormData();
-    formData.append('pdf', file);
+    formData.append('file', file); // Sử dụng 'file' để khớp với middleware
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/analyze`, {
@@ -23,12 +23,14 @@ const ApiService = {
     }
   },
 
-  translatePDF: async (file, targetLang) => {
+  translatePDF: async (file, targetLang, langName) => {
     const formData = new FormData();
-    formData.append('pdf', file);
+    formData.append('file', file); // Sử dụng 'file' để khớp với middleware
+    formData.append('targetLangs', targetLang);
+    formData.append('langNames', langName);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/Translatepdf?targetLang=${targetLang}`, {
+      const response = await fetch(`${API_BASE_URL}/api/Translatepdf`, {
         method: 'POST',
         body: formData,
       });
@@ -54,7 +56,7 @@ const ApiService = {
       console.error('Error getting PDF images:', error);
       throw error;
     }
-  }
+  },
 };
 
 export default ApiService;
