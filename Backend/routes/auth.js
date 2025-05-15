@@ -1,47 +1,89 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('../config/passport');
-const { ensureAuthenticated, checkRole } = require('../middlewares/auth'); 
+const { ensureAuthenticated, checkRole } = require('../middlewares/auth');
 
 router.get(
   '/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email', 'https://www.googleapis.com/auth/user.birthday.read', 'https://www.googleapis.com/auth/user.addresses.read']
-  })
+  (req, res, next) => {
+    req.session.returnTo = req.query.origin || '/';
+
+    passport.authenticate('google', {
+      scope: [
+        'profile',
+        'email',
+        'https://www.googleapis.com/auth/user.birthday.read'
+      ]
+    })(req, res, next);
+  }
 );
 
 router.get(
   '/google/callback',
   (req, res, next) => {
     passport.authenticate('google', (err, user, info) => {
+      const originalUrl = req.session.returnTo;
+      delete req.session.returnTo;
+
       if (err) {
         console.error('Authentication error:', err.message);
-        return res.status(500).json({ error: 'Authentication failed', details: err.message });
+        return res.redirect(`${process.env.FRONTEND_URL}/error?msg=auth_failed`);
       }
       if (!user) {
-        return res.redirect(process.env.CLIENT_URL);
+         return res.redirect(`${process.env.FRONTEND_URL}/login`);
       }
+
       req.logIn(user, (err) => {
         if (err) {
           console.error('Login error:', err.message);
-          return res.status(500).json({ error: 'Login failed', details: err.message });
+          return res.redirect(`${process.env.FRONTEND_URL}/error?msg=login_failed`);
         }
-        const redirectUrl = user.role === 'admin' ? '/dashboard' : '/translatepdf';
-        return res.redirect(`${process.env.FRONTEND_URL}${redirectUrl}`);
+
+        let redirectPath;
+
+        if (originalUrl === '/home') {
+          redirectPath = '/chatpdf';
+        } else if (originalUrl === '/admin-login' && user.role === 'admin') {
+          redirectPath = '/dashboard';
+        } else {
+          redirectPath = originalUrl || '/home';
+        }
+
+        if (!redirectPath || !redirectPath.startsWith('/')) {
+            redirectPath = '/home' + (redirectPath || '');
+        }
+
+        return res.redirect(`${process.env.FRONTEND_URL}${redirectPath}`);
       });
     })(req, res, next);
   }
 );
 
 router.get('/user', ensureAuthenticated, (req, res) => {
-  res.json(req.user);
+  console.log('User in /auth/user:', req.user, req.session); // Debug
+  res.json(req.user || req.session.user);
 });
 
-router.get('/logout', (req, res) => {
+  // API Logout
+  router.post('/logout', (req, res) => {
   req.logout((err) => {
-    if (err) return res.status(500).json({ message: 'Logout error' });
-    res.json({ message: 'Logged out' });
+    if (err) {
+      console.error('Logout error:', err.message);
+      return res.status(500).json({ message: 'Logout error', details: err.message });
+    }
+    if (req.session.currentUser) {
+      delete req.session.currentUser;
+    }
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destroy error:', err.message);
+        return res.status(500).json({ message: 'Session destroy error', details: err.message });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: 'Logged out successfully' });
+    });
   });
 });
+
 
 module.exports = router;

@@ -1,22 +1,48 @@
-// controllers/pdfController.js
 const { analyzePDF } = require('../services/pdfService');
+const { validatePDFBuffer } = require('../utils/pdfUtils');
 
 exports.analyzePDF = async (req, res, next) => {
+  console.log('Received request to /api/analyze');
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      console.log('No file uploaded');
+      return res.status(400).json({
+        success: false,
+        error: 'No file uploaded',
+        code: 'NO_FILE',
+      });
     }
 
-    // Gọi hàm xử lý PDF (từ buffer)
+    const validationError = validatePDFBuffer(req.file.buffer);
+    if (validationError) {
+      console.log('Validation error:', validationError);
+      return res.status(400).json({
+        success: false,
+        error: validationError,
+        code: 'INVALID_PDF',
+      });
+    }
+
     const result = await analyzePDF(req.file.buffer);
+    console.log('Analysis result:', JSON.stringify(result, null, 2));
 
-    return res.json({ 
+    return res.json({
       success: true,
-      originalText: result.text || result  // fallback nếu chỉ trả về chuỗi
+      data: {
+        content: result.content,
+        images: result.images,
+        metadata: result.metadata,
+      },
+      warnings: result.warnings,
     });
-
   } catch (error) {
-    console.error('Error in analyzePDF controller:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Controller error:', error);
+    const statusCode = error.code === 'PDF_PROCESSING_ERROR' ? 422 : 500;
+    return res.status(statusCode).json({
+      success: false,
+      error: error.message,
+      code: error.code || 'INTERNAL_ERROR',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    });
   }
 };
