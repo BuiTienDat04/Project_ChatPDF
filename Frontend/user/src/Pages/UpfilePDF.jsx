@@ -5,7 +5,6 @@ import ApiService from '../api/api';
 import { motion } from 'framer-motion';
 
 const UpfilePDF = ({ onFileHistoryChange }) => {
-  // State management
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileHistory, setFileHistory] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -14,11 +13,9 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
   const [renameFileId, setRenameFileId] = useState(null);
   const [newFileName, setNewFileName] = useState('');
 
-  // Refs
   const historyRef = useRef(null);
   const navigate = useNavigate();
 
-  // Load file history from localStorage
   useEffect(() => {
     const loadHistory = () => {
       try {
@@ -33,7 +30,6 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
             localStorage.setItem('fileHistory', JSON.stringify([]));
           }
         } else {
-          // Nếu không có dữ liệu, khởi tạo mảng rỗng
           setFileHistory([]);
           localStorage.setItem('fileHistory', JSON.stringify([]));
         }
@@ -46,7 +42,6 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     loadHistory();
   }, []);
 
-  // Save file history to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('fileHistory', JSON.stringify(fileHistory));
@@ -76,12 +71,7 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 300);
 
-      const result = await ApiService.analyzePDF(file, (progressEvent) => {
-        if (progressEvent.lengthComputable) {
-          const progress = Math.round((progressEvent.loaded / progressEvent.total) * 90);
-          setUploadProgress(progress);
-        }
-      });
+      const result = await ApiService.analyzePDF(file);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -89,13 +79,6 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
       if (!result?.success) throw new Error('Invalid response from server');
 
       const { content = {}, images = [], metadata = {} } = result.data || {};
-
-      const reader = new FileReader();
-      const base64Promise = new Promise((resolve) => {
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-      const base64Data = await base64Promise;
 
       const newFileEntry = {
         id: Date.now() + Math.random().toString(36).substring(2, 9),
@@ -109,15 +92,8 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
           data: img.data || img.base64 || '',
           page: img.page || 1,
         })),
-        metadata: {
-          ...metadata,
-          fileInfo: {
-            size: file.size,
-            type: file.type,
-            lastModified: file.lastModified,
-            data: base64Data,
-          },
-        },
+        metadata: { ...metadata, fileInfo: { size: file.size, type: file.type, lastModified: file.lastModified } },
+        originalFile: file, // Thêm File object gốc
       };
 
       console.log('New file entry:', newFileEntry);
@@ -175,10 +151,7 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
 
   return (
     <section className="flex flex-col items-center py-12 px-6 min-h-screen bg-gradient-to-b from-purple-100 to-white font-sans">
-      {/* Upload Area */}
-      <div
-        className={`border-2 border-purple-200 rounded-3xl w-full max-w-[90%] min-h-[420px] p-12 flex flex-col items-center justify-center text-center bg-gradient-to-br from-purple-50/90 to-pink-50/90 backdrop-blur-md shadow-xl ${isUploading ? 'border-pink-300 bg-pink-100/90' : selectedFile ? 'border-pink-300 bg-pink-100/90' : 'hover:border-purple-300'}`}
-      >
+      <div className={`border-2 border-purple-200 rounded-3xl w-full max-w-[90%] min-h-[420px] p-12 flex flex-col items-center justify-center text-center bg-gradient-to-br from-purple-50/90 to-pink-50/90 backdrop-blur-md shadow-xl ${isUploading ? 'border-pink-300 bg-pink-100/90' : selectedFile ? 'border-pink-300 bg-pink-100/90' : 'hover:border-purple-300'}`}>
         <input
           type="file"
           id="file-upload"
@@ -187,7 +160,6 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
           onChange={handleFileChange}
           disabled={isUploading}
         />
-
         <div className="mb-10">
           {isUploading ? (
             <Loader2 className="animate-spin text-purple-600" size={60} />
@@ -197,12 +169,9 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
             <Upload className="text-purple-500" size={60} />
           )}
         </div>
-
         {isUploading ? (
           <div className="w-full max-w-lg space-y-5">
-            <p className="font-semibold text-purple-800 text-2xl tracking-tight">
-              Đang tải lên {selectedFile?.name}
-            </p>
+            <p className="font-semibold text-purple-800 text-2xl tracking-tight">Đang tải lên {selectedFile?.name}</p>
             <div className="w-full bg-purple-100 rounded-full h-5 overflow-hidden shadow-inner">
               <div
                 className="bg-gradient-to-r from-purple-500 to-pink-500 h-5 rounded-full"
@@ -211,20 +180,13 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
             </div>
           </div>
         ) : selectedFile ? (
-          <p className="font-semibold text-pink-600 text-2xl tracking-tight">
-            Tài liệu đã sẵn sàng để xử lý!
-          </p>
+          <p className="font-semibold text-pink-600 text-2xl tracking-tight">Tài liệu đã sẵn sàng để xử lý!</p>
         ) : (
           <>
-            <p className="font-bold text-purple-900 text-3xl tracking-tight">
-              Kéo & thả PDF của bạn tại đây
-            </p>
-            <p className="text-lg text-gray-600 mt-4 max-w-xl leading-relaxed">
-              Hoặc nhấn để chọn tệp PDF (tối đa 50MB) và khám phá ngay!
-            </p>
+            <p className="font-bold text-purple-900 text-3xl tracking-tight">Kéo & thả PDF của bạn tại đây</p>
+            <p className="text-lg text-gray-600 mt-4 max-w-xl leading-relaxed">Hoặc nhấn để chọn tệp PDF (tối đa 50MB) và khám phá ngay!</p>
           </>
         )}
-
         <label
           htmlFor="file-upload"
           className={`mt-12 px-12 py-5 rounded-full shadow-xl flex items-center gap-5 cursor-pointer font-semibold text-xl bg-gradient-to-r ${isUploading
@@ -240,22 +202,16 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
           {isUploading ? 'Đang xử lý...' : 'Chọn tệp PDF'}
         </label>
       </div>
-
-      {/* File History */}
       <div ref={historyRef} className="w-full max-w-6xl mt-16 mx-auto">
         <div className="bg-gradient-to-br from-white to-purple-50/20 backdrop-blur-md rounded-3xl shadow-lg p-10 border border-purple-100/20">
-          <h2 className="text-5xl font-semibold text-purple-900 mb-10 text-center tracking-wide">
-            Tài liệu đã tải lên
-          </h2>
+          <h2 className="text-5xl font-semibold text-purple-900 mb-10 text-center tracking-wide">Tài liệu đã tải lên</h2>
           {fileHistory.length === 0 ? (
-            <p className="text-gray-500 text-center text-xl font-light py-12 tracking-wide">
-              📁 Chưa có tài liệu nào được tìm thấy
-            </p>
+            <p className="text-gray-500 text-center text-xl font-light py-12 tracking-wide">📁 Chưa có tài liệu nào được tìm thấy</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {fileHistory.map((file, index) => (
                 <motion.div
-                  key={file.id} // Đảm bảo key là duy nhất
+                  key={file.id}
                   className="relative bg-white rounded-2xl border border-purple-100/30 hover:border-purple-200 hover:shadow-md transition-all duration-500 ease-out cursor-pointer group p-6"
                   onClick={() => navigate('/translatepdf', { state: { file } })}
                   initial={{ opacity: 0, y: 20 }}
@@ -266,12 +222,8 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
                     <div className="flex items-center gap-4">
                       <FileText className="text-purple-600 flex-shrink-0" size={28} />
                       <div className="min-w-0">
-                        <span className="font-medium text-purple-900 truncate block text-lg">
-                          {file.name || 'Không có tên'} {/* Đảm bảo có giá trị mặc định */}
-                        </span>
-                        <span className="text-xs text-gray-400 block mt-1">
-                          {formatDate(file.uploadDate)}
-                        </span>
+                        <span className="font-medium text-purple-900 truncate block text-lg">{file.name || 'Không có tên'}</span>
+                        <span className="text-xs text-gray-400 block mt-1">{formatDate(file.uploadDate)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -302,29 +254,23 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
             </div>
           )}
         </div>
-
         <style jsx>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
           }
-
           .custom-scrollbar::-webkit-scrollbar-track {
             background: #fafaff;
             border-radius: 4px;
           }
-
           .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #c4b5fd;
             border-radius: 4px;
           }
-
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #a78bfa;
           }
         `}</style>
       </div>
-
-      {/* Rename Modal */}
       {showRenameModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <motion.div
