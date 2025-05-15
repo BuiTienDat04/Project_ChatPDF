@@ -47,6 +47,8 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     }
   }, [fileHistory, onFileHistoryChange]);
 
+  const handleFileProcessing = async (file) => {
+    if (!file || file.type !== 'application/pdf' || isUploading) return;
   // Handle file processing with backend API
   const handleFileProcessing = async (file) => {
     if (!file || !isValidFileType(file)) return;
@@ -57,6 +59,52 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     setUploadProgress(0);
 
     try {
+      const result = await ApiService.analyzePDF(file);
+      setUploadProgress(100);
+
+      console.log('Backend response:', JSON.stringify(result, null, 2));
+
+      if (!result?.success) throw new Error('Invalid response from server');
+
+      const { content = {}, images = [], metadata = {} } = result.data || {};
+
+      // Chuyển file PDF thành base64 để lưu
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      const base64Data = await base64Promise;
+
+      const newFileEntry = {
+        id: Date.now() + Math.random().toString(36).substring(2, 9),
+        name: file.name,
+        uploadDate: new Date().toISOString(),
+        content: content,
+        sections: content.sections || [],
+        pages: content.pages || [],
+        images: images.map(img => ({
+          ...img,
+          data: img.data || img.base64 || '',
+          page: img.page || 1,
+        })),
+        metadata: {
+          ...metadata,
+          fileInfo: {
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified,
+            data: base64Data, // Lưu base64 của file PDF
+          },
+        },
+      };
+
+      console.log('New file entry sections:', JSON.stringify(newFileEntry.sections, null, 2));
+      updateFileHistory(newFileEntry);
+      navigate('/translatepdf', { state: { file: newFileEntry } });
+    } catch (error) {
+      console.error('Processing error:', error);
+      alert(`Error: ${error.message}`);
       // Simulate progress (replace with actual progress events if needed)
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
@@ -86,6 +134,7 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
       setSelectedFile(null);
     }
   };
+
 
   // Helper functions
   const isValidFileType = (file) => {
@@ -180,6 +229,11 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
           <div className="w-full max-w-lg space-y-5">
             <p className="font-semibold text-purple-800 text-2xl tracking-tight">
               Đang tải lên {selectedFile?.name}
+Resolving conflicts between Commit and main and committing changes  Commit
+1 conflicting file
+UpfilePDF.jsx
+Frontend/user/src/Pages/UpfilePDF.jsx
+Frontend/user/src/Pages/UpfilePDF.jsx
             </p>
             <div className="w-full bg-purple-100 rounded-full h-5 overflow-hidden shadow-inner">
               <div
@@ -226,12 +280,12 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
       >
         <div className="bg-gradient-to-br from-white to-purple-50/20 backdrop-blur-md rounded-3xl shadow-lg p-10 border border-purple-100/20">
           <h2 className="text-5xl font-semibold text-purple-900 mb-10 text-center tracking-wide">
-            Tài liệu đã tải lên
-          </h2>
 
           {fileHistory.length === 0 ? (
             <p className="text-gray-500 text-center text-xl font-light py-12 tracking-wide">
               📁 Chưa có tài liệu nào được tìm thấy
+            Tài liệu đã tải lên
+          </h2>
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -335,11 +389,11 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
               >
                 Hủy
               </button>
-              <button
+              <buttonConfirm}
+              >
                 className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl text-base font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 transition-colors duration-300"
                 disabled={!newFileName.trim()}
-                onClick={handleRenameConfirm}
-              >
+                onClick={handleRename
                 Xác nhận
               </button>
             </div>
@@ -350,4 +404,4 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
   );
 };
 
-export default UpfilePDF;
+export default UpfilePDF; 

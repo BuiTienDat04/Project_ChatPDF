@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Download, ArrowLeft, ArrowRight, List, AlignLeft, BookOpen, FileText, Image } from 'lucide-react';
+import ApiService from '../api/api';
 
 const languages = [
   { code: 'vi', name: 'Vietnamese' },
@@ -21,6 +22,8 @@ export default function TranslatePDF() {
   const [showDocumentStructure, setShowDocumentStructure] = useState(true);
   const [pdfStructure, setPdfStructure] = useState(null);
   const [activeTab, setActiveTab] = useState('pages');
+  const [translatedContent, setTranslatedContent] = useState(null);
+  const [translationError, setTranslationError] = useState(null);
 
   const contentRef = useRef(null);
   const translationRef = useRef(null);
@@ -81,7 +84,12 @@ export default function TranslatePDF() {
     console.log('PDF Structure after analysis:', JSON.stringify(structure, null, 2));
   };
 
-  const handleLanguageChange = (e) => setLanguage(e.target.value);
+  const handleLanguageChange = (e) => {
+    setLanguage(e.target.value);
+    setTranslated(false); // Reset translated state when language changes
+    setTranslatedContent(null);
+    setTranslationError(null);
+  };
 
   const formatDate = (isoString) => {
     if (!isoString) return '';
@@ -89,31 +97,60 @@ export default function TranslatePDF() {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
-  const translateContent = () => {
+  const translateContent = async () => {
     setIsTranslating(true);
-    setTimeout(() => {
+    setTranslationError(null);
+    try {
+      // Tạo đối tượng File từ dữ liệu file (nếu cần)
+      const pdfBlob = await fetch(file.metadata?.fileInfo?.data || '').then(res => res.blob());
+      const pdfFile = new File([pdfBlob], file.name, { type: 'application/pdf' });
+
+      const result = await ApiService.translatePDF(pdfFile, language);
+      console.log('Translation response:', JSON.stringify(result, null, 2));
+
+      if (!result.success) {
+        throw new Error(result.error || 'Translation failed');
+      }
+
+      setTranslatedContent(result.data.translatedContent);
       setTranslated(true);
+    } catch (error) {
+      console.error('Translation error:', error);
+      setTranslationError(error.message || 'Failed to translate PDF');
+    } finally {
       setIsTranslating(false);
-    }, 1500);
+    }
   };
 
-  const handleDownload = () => alert('Download feature will be implemented soon.');
+  const handleDownload = () => {
+    alert('Download feature will be implemented soon.');
+  };
 
   const renderContent = (sections = [], images = [], pageRange, isTranslation = false) => {
     const startPage = (pageRange - 1) * pagesToShow + 1;
     const endPage = Math.min(startPage + pagesToShow - 1, pdfStructure?.pageCount || 1);
 
-    const allSections = sections.length > 0 ? sections : (file.sections || []);
-    const allImages = images.length > 0 ? images : (file.images || []);
+    let contentToRender = sections.length > 0 ? sections : (file.sections || []);
+    let imagesToRender = images.length > 0 ? images : (file.images || []);
 
-    const filteredSections = allSections.filter(s => s.page >= startPage && s.page <= endPage);
-    const filteredImages = allImages.filter(img => img.page >= startPage && img.page <= endPage);
+    if (isTranslation && translatedContent) {
+      // Chuyển đổi translatedContent thành định dạng sections
+      contentToRender = translatedContent.paragraphs.map((para, idx) => ({
+        type: 'text',
+        content: para,
+        page: Math.floor(idx / (translatedContent.paragraphs.length / (pdfStructure?.pageCount || 1))) + 1,
+      }));
+      imagesToRender = []; // Không hiển thị ảnh trong phần dịch
+    }
+
+    const filteredSections = contentToRender.filter(s => s.page >= startPage && s.page <= endPage);
+    const filteredImages = imagesToRender.filter(img => img.page >= startPage && img.page <= endPage);
 
     console.log(`Rendering content for pages ${startPage}-${endPage} (isTranslation: ${isTranslation})`);
     console.log('Filtered sections:', JSON.stringify(filteredSections, null, 2));
     console.log('Filtered images:', JSON.stringify(filteredImages, null, 2));
 
-    if (filteredSections.length === 0 && filteredImages.length === 0) {
+    if (filteredSections.length === 0 && filteredImages.length === 0 && !isTranslation) {
       return (
         <div className="p-4 bg-white rounded-lg border border-gray-200">
           <p className="text-gray-700 mb-4 whitespace-pre-wrap leading-relaxed">No content available for page {startPage}.</p>
@@ -121,13 +158,21 @@ export default function TranslatePDF() {
       );
     }
 
+    if (isTranslation && translationError) {
+      return (
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <p className="text-red-500 mb-4 whitespace-pre-wrap leading-relaxed">Error: {translationError}</p>
+        </div>
+      );
+    }
+
     const sectionElements = filteredSections.map((section, idx) => {
-      const content = isTranslation && translated ? `[Translated to ${language}] ${section.content}` : section.content;
+      const content = section.content || (isTranslation && translatedContent ? translatedContent.text : 'No content');
       if (section.type === 'heading') {
         return (
           <div key={idx} className="mb-4 pb-2 border-b border-gray-100">
             <h2 className="text-2xl font-bold text-gray-800">
-              {content || 'No heading content'}
+              {content}
               <span className="ml-2 text-xs text-gray-400">Page {section.page || 1}</span>
             </h2>
           </div>
@@ -141,13 +186,12 @@ export default function TranslatePDF() {
             </div>
             <ul className="list-disc text-gray-700">
               {(section.items || []).map((item, i) => (
-                <li key={i} className="mb-2">{isTranslation && translated ? `[Translated to ${language}] ${item}` : item || 'No item'}</li>
+                <li key={i} className="mb-2">{item || 'No item'}</li>
               ))}
             </ul>
           </div>
         );
       } else {
-        // Xử lý text, hiển thị toàn bộ nội dung
         const lines = content.split('\n').filter(line => line.trim());
         return (
           <div key={idx} className="mb-4">
@@ -212,9 +256,6 @@ export default function TranslatePDF() {
                 <div className="bg-yellow-50 p-3 rounded-md"><div className="text-xs text-gray-500">Total Headings</div><div className="font-semibold text-xl">{pdfStructure.headings.length}</div></div>
                 <div className="bg-purple-50 p-3 rounded-md"><div className="text-xs text-gray-500">Total Images</div><div className="font-semibold text-xl">{pdfStructure.images}</div></div>
               </div>
-              {/* Xóa phần Page Structure bằng cách comment hoặc xóa renderPageStructure */}
-              {/* <h3 className="font-semibold text-gray-800 mb-2">Page Structure</h3>
-              <div className="space-y-2">{Object.keys(pdfStructure.pages).map(pageNum => renderPageStructure(parseInt(pageNum)))}</div> */}
             </div>
           )}
           {activeTab === 'headings' && (
@@ -293,7 +334,7 @@ export default function TranslatePDF() {
           <select className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" value={language} onChange={handleLanguageChange} disabled={isTranslating}>
             {languages.map((lang) => <option key={lang.code} value={lang.code}>{lang.name}</option>)}
           </select>
-          <button onClick={translateContent} disabled={isTranslating || translated} className={`text-sm px-4 py-2 rounded-lg shadow-sm flex items-center space-x-2 ${isTranslating ? 'bg-gray-400 text-gray-100 cursor-not-allowed' : translated ? 'bg-green-600 text-white' : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800'} transition-all duration-200`}>
+          <button onClick={translateContent} disabled={isTranslating} className={`text-sm px-4 py-2 rounded-lg shadow-sm flex items-center space-x-2 ${isTranslating ? 'bg-gray-400 text-gray-100 cursor-not-allowed' : translated ? 'bg-green-600 text-white' : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800'} transition-all duration-200`}>
             {isTranslating ? (<><svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Translating...</span></>) : translated ? <span>Translated</span> : <span>Translate</span>}
           </button>
         </div>
@@ -319,7 +360,7 @@ export default function TranslatePDF() {
                 <p className="text-gray-600">Translating content, please wait...</p>
               </div>
             ) : (
-              renderContent(file.sections || [], file.images || [], currentPage, true)
+              renderContent([], [], currentPage, true)
             )}
           </div>
         </div>
