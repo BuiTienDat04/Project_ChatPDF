@@ -7,7 +7,7 @@ import { MessageCircle, FileText, Globe, Star, Zap, BookOpen, Rocket } from 'luc
 const HomePage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-100 font-sans">
-            
+
             <main className="pt-20 w-full relative z-10">
                 <Navigation />
                 {/* Hero Section */}
@@ -33,53 +33,53 @@ const HomePage = () => {
                         </svg>
                     </div>
 
-                    <div className="relative z-10">
-                        <h1
-                            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent mb-6 animate-text-slide-up hover:scale-105 transition-transform duration-300"
-                            style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}
-                        >
-                            Sider: Khám Phá AI với Chatbot & ChatPDF
-                        </h1>
-                        <p
-                            className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-10 leading-relaxed animate-text-slide-up hover:translate-y-[-2px] transition-transform duration-300"
-                            style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}
-                        >
-                            Biến ý tưởng thành hiện thực với Sider! Trò chuyện thông minh, dịch tài liệu PDF sang hơn 100 ngôn ngữ, và mở khóa tri thức toàn cầu chỉ trong vài giây. Sider là người bạn đồng hành cho mọi hành trình sáng tạo.
-                        </p>
-                        <div className="flex flex-col md:flex-row gap-4 justify-center">
-                            <Link
-                                to="/chatbot"
-                                className="px-8 py-3 bg-gradient-to-r from-pink-400 to-purple-500 text-white font-semibold rounded-full shadow-lg
-                transition-all duration-300 hover:from-pink-500 hover:to-purple-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-300 animate-text-slide-up"
-                                style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}
+                    <div className="relative z-10 pt-28 sm:pt-32 md:pt-36 pb-16 px-4 sm:px-6 lg:px-8 scroll-mt-16">
+                        <div className="max-w-4xl mx-auto text-center">
+                            <h1
+                                className="text-4xl sm:text-5xl md:text-6xl font-semibold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent mb-6 animate-text-slide-up hover:scale-[1.03] transition-transform duration-300"
+                                style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}
                             >
-                                Trò chuyện ngay
-                            </Link>
-                            <Link
-                                to="/pdf-chat"
-                                className="px-8 py-3 bg-transparent border-2 border-purple-500 text-purple-500 font-semibold rounded-full
-                transition-all duration-300 hover:bg-purple-500 hover:text-white hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-300 animate-text-slide-up"
-                                style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}
+                                Sider: Khám Phá AI với Chatbot & ChatPDF
+                            </h1>
+                            <p
+                                className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed animate-text-slide-up hover:-translate-y-[2px] transition-transform duration-300"
+                                style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}
                             >
-                                Dịch PDF
-                            </Link>
-                        </div>
-                        <div className="flex flex-col items-center text-purple-600 mt-16 animate-bounce">
-                            <svg
-                                className="w-8 h-8 mb-2"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                viewBox="0 0 24 24"
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                            </svg>
-                            <span
-                                className="text-base font-medium animate-text-slide-up hover:translate-y-[-2px] transition-transform duration-300"
-                                style={{ animationDelay: '1s', animationFillMode: 'forwards' }}
-                            >
-                                Khám phá thêm về Sider
-                            </span>
+                                Biến ý tưởng thành hiện thực với Sider! Trò chuyện thông minh, dịch tài liệu PDF sang hơn 100 ngôn ngữ, và mở khóa tri thức toàn cầu chỉ trong vài giây. Sider là người bạn đồng hành cho mọi hành trình sáng tạo.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link
+                                    to="/chatbot"
+                                    className="px-8 py-3 bg-gradient-to-r from-pink-400 to-purple-500 text-white font-medium rounded-full shadow-sm transition-all duration-300 hover:from-pink-500 hover:to-purple-600 hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-pink-300 animate-text-slide-up"
+                                    style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}
+                                >
+                                    Trò chuyện ngay
+                                </Link>
+                                <Link
+                                    to="/pdf-chat"
+                                    className="px-8 py-3 bg-transparent border-2 border-purple-400 text-purple-400 font-medium rounded-full transition-all duration-300 hover:bg-purple-400 hover:text-white hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-purple-300 animate-text-slide-up"
+                                    style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}
+                                >
+                                    Dịch PDF
+                                </Link>
+                            </div>
+                            <div className="flex flex-col items-center text-purple-500 mt-16 animate-pulse">
+                                <svg
+                                    className="w-6 h-6 mb-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                                <span
+                                    className="text-sm font-medium animate-text-slide-up hover:-translate-y-[2px] transition-transform duration-300"
+                                    style={{ animationDelay: '1s', animationFillMode: 'forwards' }}
+                                >
+                                    Khám phá thêm về Sider
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </section>

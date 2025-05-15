@@ -77,11 +77,9 @@ export default function App() {
         <Route path="/pricing" element={< PricingPage />} />
         <Route path="/chatbot" element={<ChatBotPage />} />
 
-        <Route path="/" element={<HomePage />} />
         <Route path="/testimonialsSection" element={<TestimonialsSection />} />
 
 
-        
       </Routes>
 
       <Footer />
