@@ -86,7 +86,7 @@ export default function TranslatePDF() {
 
   const handleLanguageChange = (e) => {
     setLanguage(e.target.value);
-    setTranslated(false); // Reset translated state when language changes
+    setTranslated(false);
     setTranslatedContent(null);
     setTranslationError(null);
   };
@@ -97,30 +97,34 @@ export default function TranslatePDF() {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
-  const translateContent = async () => {
-    setIsTranslating(true);
-    setTranslationError(null);
-    try {
-      // Tạo đối tượng File từ dữ liệu file (nếu cần)
-      const pdfBlob = await fetch(file.metadata?.fileInfo?.data || '').then(res => res.blob());
-      const pdfFile = new File([pdfBlob], file.name, { type: 'application/pdf' });
-
-      const result = await ApiService.translatePDF(pdfFile, language);
-      console.log('Translation response:', JSON.stringify(result, null, 2));
-
-      if (!result.success) {
-        throw new Error(result.error || 'Translation failed');
-      }
-
-      setTranslatedContent(result.data.translatedContent);
-      setTranslated(true);
-    } catch (error) {
-      console.error('Translation error:', error);
-      setTranslationError(error.message || 'Failed to translate PDF');
-    } finally {
-      setIsTranslating(false);
+ const translateContent = async () => {
+  setIsTranslating(true);
+  setTranslationError(null);
+  try {
+    const langName = languages.find(lang => lang.code === language)?.name || language;
+    if (!file.originalFile || typeof file.originalFile !== 'object' || !(file.originalFile instanceof File)) {
+      throw new Error('No valid original file available for translation');
     }
-  };
+    const result = await ApiService.translatePDF(file.originalFile, language, langName);
+    console.log('Translation response:', JSON.stringify(result, null, 2));
+
+    if (!result.success) {
+      throw new Error(result.error || 'Translation failed');
+    }
+
+    if (result.data && result.data[0] && result.data[0].translatedContent) {
+      setTranslatedContent(result.data[0].translatedContent);
+      setTranslated(true);
+    } else {
+      throw new Error('No translated content returned');
+    }
+  } catch (error) {
+    console.error('Translation error:', error);
+    setTranslationError(error.message || 'Failed to translate PDF');
+  } finally {
+    setIsTranslating(false);
+  }
+};
 
   const handleDownload = () => {
     alert('Download feature will be implemented soon.');
@@ -134,13 +138,31 @@ export default function TranslatePDF() {
     let imagesToRender = images.length > 0 ? images : (file.images || []);
 
     if (isTranslation && translatedContent) {
-      // Chuyển đổi translatedContent thành định dạng sections
       contentToRender = translatedContent.paragraphs.map((para, idx) => ({
         type: 'text',
         content: para,
         page: Math.floor(idx / (translatedContent.paragraphs.length / (pdfStructure?.pageCount || 1))) + 1,
       }));
-      imagesToRender = []; // Không hiển thị ảnh trong phần dịch
+      imagesToRender = [];
+    }
+
+    // Xử lý văn bản bản gốc để cải thiện căn chỉnh
+    if (!isTranslation) {
+      contentToRender = contentToRender.map(section => {
+        if (section.type === 'text') {
+          // Tách đoạn văn dựa trên ký tự xuống dòng hoặc khoảng trắng thừa
+          const paragraphs = section.content
+            .split('\n')
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+          return paragraphs.map((content, idx) => ({
+            ...section,
+            content,
+            subIndex: idx, // Thêm subIndex để phân biệt các đoạn trong cùng section
+          }));
+        }
+        return section;
+      }).flat();
     }
 
     const filteredSections = contentToRender.filter(s => s.page >= startPage && s.page <= endPage);
@@ -166,11 +188,20 @@ export default function TranslatePDF() {
       );
     }
 
+    if (isTranslation && !translatedContent) {
+      return (
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <p className="text-gray-500 mb-4 whitespace-pre-wrap leading-relaxed">Please click Translate to see the translated content.</p>
+        </div>
+      );
+    }
+
     const sectionElements = filteredSections.map((section, idx) => {
       const content = section.content || (isTranslation && translatedContent ? translatedContent.text : 'No content');
+      const key = section.subIndex ? `${idx}-${section.subIndex}` : idx; // Sử dụng subIndex nếu có
       if (section.type === 'heading') {
         return (
-          <div key={idx} className="mb-4 pb-2 border-b border-gray-100">
+          <div key={key} className="mb-4 pb-2 border-b border-gray-100">
             <h2 className="text-2xl font-bold text-gray-800">
               {content}
               <span className="ml-2 text-xs text-gray-400">Page {section.page || 1}</span>
@@ -179,7 +210,7 @@ export default function TranslatePDF() {
         );
       } else if (section.type === 'list') {
         return (
-          <div key={idx} className="mb-4 ml-5">
+          <div key={key} className="mb-4 ml-5">
             <div className="flex items-center text-gray-600 text-sm mb-1">
               <List className="w-4 h-4 mr-1" />
               <span>List • Page {section.page || 1}</span>
@@ -192,9 +223,9 @@ export default function TranslatePDF() {
           </div>
         );
       } else {
-        const lines = content.split('\n').filter(line => line.trim());
+        const lines = Array.isArray(content) ? content : content.split('\n').filter(line => line.trim());
         return (
-          <div key={idx} className="mb-4">
+          <div key={key} className="mb-4">
             <div className="flex items-center text-gray-600 text-sm mb-1">
               <AlignLeft className="w-4 h-4 mr-1" />
               <span>Paragraph • Page {section.page || 1}</span>

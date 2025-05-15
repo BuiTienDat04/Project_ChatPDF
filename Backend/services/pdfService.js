@@ -10,7 +10,44 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 // Debug API key
-console.log('GEMINI_API_KEY:', process.env.GEMINI_API_KEY);
+console.log('GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Đã thiết lập' : 'Chưa thiết lập');
+
+// Ánh xạ mã ngôn ngữ sang tên đầy đủ (ISO 639-1)
+const languageMap = {
+  en: 'English',
+  vi: 'Vietnamese',
+  fr: 'French',
+  de: 'German',
+  ja: 'Japanese',
+  ko: 'Korean',
+  zh: 'Chinese (Simplified)',
+  ru: 'Russian',
+  es: 'Spanish',
+  it: 'Italian',
+  pt: 'Portuguese',
+  ar: 'Arabic',
+  hi: 'Hindi',
+  th: 'Thai',
+  nl: 'Dutch',
+  sv: 'Swedish',
+  pl: 'Polish',
+  tr: 'Turkish',
+};
+
+/**
+ * Kiểm tra tính hợp lệ của buffer PDF
+ * @param {Buffer} buffer - Buffer của file PDF
+ * @returns {string|null} - Lỗi nếu có, null nếu hợp lệ
+ */
+function validatePDFBuffer(buffer) {
+  if (!buffer || buffer.length === 0) {
+    return 'Tệp PDF trống';
+  }
+  if (!buffer.toString('utf8', 0, 5).startsWith('%PDF-')) {
+    return 'Tệp không phải định dạng PDF hợp lệ';
+  }
+  return null;
+}
 
 /**
  * Kiểm tra xem một đoạn văn bản có phải là tiêu đề
@@ -362,52 +399,53 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
 }
 
 /**
- * Trích xuất và dịch văn bản từ PDF
- * @param {Buffer} pdfBuffer - Buffer của file PDF
- * @param {string} targetLang - Ngôn ngữ mục tiêu (ví dụ: 'en', 'vi')
+ * Dịch văn bản đã trích xuất từ PDF
+ * @param {object} structuredText - Văn bản đã trích xuất từ PDF
+ * @param {string} targetLang - Mã ngôn ngữ mục tiêu (ví dụ: 'en', 'vi')
+ * @param {string} langName - Tên ngôn ngữ đầy đủ (ví dụ: 'English', 'Vietnamese')
  * @returns {Promise<object>} Văn bản đã dịch
  */
-async function translatePDF(pdfBuffer, targetLang = 'en') {
+async function translatePDF(structuredText, targetLang = 'en', langName = 'English') {
   const startTime = performance.now();
   let warnings = [];
 
+  // Chuẩn hóa mã ngôn ngữ
+  targetLang = targetLang.toLowerCase();
+  const effectiveLangName = languageMap[targetLang] || langName || targetLang;
+  console.log(`Bắt đầu dịch sang ${effectiveLangName} (${targetLang})`);
+
   try {
-    // Trích xuất văn bản
-    let structuredText;
-    try {
-      structuredText = await extractTextWithStructure(pdfBuffer);
-      console.log(`Trích xuất ${structuredText.paragraphs.length} đoạn văn`);
-    } catch (textErr) {
-      warnings.push(`Vấn đề trích xuất văn bản: ${textErr.message}`);
-      console.warn('Cảnh báo trích xuất văn bản:', textErr);
-      throw new Error(`Không thể trích xuất văn bản: ${textErr.message}`);
+    // Kiểm tra structuredText
+    if (!structuredText || !structuredText.text) {
+      warnings.push('Không có văn bản để dịch');
+      console.log('Không tìm thấy văn bản trong structuredText');
+      throw new Error('Không có văn bản để dịch');
     }
 
     // Dịch văn bản
     let translatedText = '';
     let translatedParagraphs = [];
-    if (structuredText.text) {
-      try {
-        const prompt = `Dịch văn bản sau sang ${targetLang} một cách tự nhiên và chính xác:\n${structuredText.text}`;
-        const result = await model.generateContent(prompt);
-        translatedText = result.response.text();
+    try {
+      const prompt = `Translate the following text to ${effectiveLangName} naturally and accurately:\n${structuredText.text}`;
+      console.log(`Prompt gửi đi: ${prompt.slice(0, 100)}...`);
+      const result = await model.generateContent(prompt);
+      translatedText = result.response.text();
+      console.log(`Kết quả dịch (text): ${translatedText.slice(0, 100)}...`);
 
-        translatedParagraphs = await Promise.all(
-          structuredText.paragraphs.map(async (para) => {
-            if (!para) return '';
-            const paraPrompt = `Dịch văn bản sau sang ${targetLang} một cách tự nhiên và chính xác:\n${para}`;
-            const paraResult = await model.generateContent(paraPrompt);
-            return paraResult.response.text();
-          })
-        );
-        console.log(`Đã dịch ${translatedParagraphs.length} đoạn văn sang ${targetLang}`);
-      } catch (translationErr) {
-        warnings.push(`Lỗi dịch văn bản: ${translationErr.message}`);
-        console.error('Lỗi dịch:', translationErr);
-        throw new Error(`Không thể dịch văn bản: ${translationErr.message}`);
-      }
-    } else {
-      warnings.push('Không có văn bản để dịch');
+      translatedParagraphs = await Promise.all(
+        structuredText.paragraphs.map(async (para, index) => {
+          if (!para) return '';
+          const paraPrompt = `Translate the following text to ${effectiveLangName} naturally and accurately:\n${para}`;
+          console.log(`Dịch đoạn ${index + 1}/${structuredText.paragraphs.length} sang ${effectiveLangName}`);
+          const paraResult = await model.generateContent(paraPrompt);
+          return paraResult.response.text();
+        })
+      );
+      console.log(`Đã dịch ${translatedParagraphs.length} đoạn văn sang ${effectiveLangName}`);
+    } catch (translationErr) {
+      warnings.push(`Lỗi dịch văn bản sang ${effectiveLangName}: ${translationErr.message}`);
+      console.error('Lỗi dịch:', translationErr);
+      throw new Error(`Không thể dịch văn bản: ${translationErr.message}`);
     }
 
     const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
@@ -427,7 +465,7 @@ async function translatePDF(pdfBuffer, targetLang = 'en') {
       warnings: warnings.length > 0 ? warnings : undefined,
     };
   } catch (error) {
-    console.error('Lỗi dịch PDF:', error);
+    console.error(`Lỗi dịch PDF sang ${effectiveLangName}:`, error);
     const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
 
     warnings.push(`Lỗi dịch PDF: ${error.message}`);
@@ -445,4 +483,125 @@ async function translatePDF(pdfBuffer, targetLang = 'en') {
   }
 }
 
-module.exports = { analyzePDF, translatePDF };
+/**
+ * Controller để dịch PDF
+ */
+async function translatePDFController(req, res, next) {
+  console.log('Nhận yêu cầu tới /api/Translatepdf');
+  try {
+    if (!req.file) {
+      console.log('Không có tệp được tải lên');
+      return res.status(400).json({
+        success: false,
+        error: 'Không có tệp được tải lên',
+        code: 'NO_FILE',
+      });
+    }
+
+    const validationError = validatePDFBuffer(req.file.buffer);
+    if (validationError) {
+      console.log('Lỗi xác thực:', validationError);
+      return res.status(400).json({
+        success: false,
+        error: validationError,
+        code: 'INVALID_PDF',
+      });
+    }
+
+    // Trích xuất văn bản một lần
+    let structuredText;
+    try {
+      structuredText = await extractTextWithStructure(req.file.buffer);
+      console.log(`Trích xuất ${structuredText.paragraphs.length} đoạn văn`);
+    } catch (textErr) {
+      console.error('Lỗi trích xuất văn bản:', textErr);
+      return res.status(422).json({
+        success: false,
+        error: `Không thể trích xuất văn bản: ${textErr.message}`,
+        code: 'TEXT_EXTRACTION_ERROR',
+      });
+    }
+
+    // Lấy danh sách ngôn ngữ từ yêu cầu
+    let targetLangs = req.body.targetLangs || req.query.targetLangs || [req.body.language || 'en'];
+    let langNames = req.body.langNames || req.query.langNames || [];
+    if (typeof targetLangs === 'string') {
+      targetLangs = targetLangs.split(',').map(lang => lang.trim().toLowerCase());
+    }
+    if (typeof langNames === 'string') {
+      langNames = langNames.split(',').map(name => name.trim());
+    }
+    if (!Array.isArray(targetLangs) || targetLangs.length === 0) {
+      console.log('Danh sách ngôn ngữ không hợp lệ');
+      return res.status(400).json({
+        success: false,
+        error: 'Danh sách ngôn ngữ không hợp lệ',
+        code: 'INVALID_LANGUAGES',
+      });
+    }
+
+    console.log('Ngôn ngữ yêu cầu:', targetLangs);
+    console.log('Tên ngôn ngữ:', langNames);
+
+    // Dịch sang từng ngôn ngữ
+    const results = await Promise.all(
+      targetLangs.map(async (lang, index) => {
+        try {
+          const langName = langNames[index] || languageMap[lang] || lang;
+          const result = await translatePDF(structuredText, lang, langName);
+          return { language: lang, langName, ...result };
+        } catch (error) {
+          console.error(`Lỗi dịch sang ${lang}:`, error);
+          return {
+            language: lang,
+            langName: langNames[index] || lang,
+            success: false,
+            translatedContent: { text: '', paragraphs: [] },
+            metadata: {
+              processingTime: '0s',
+              pages: 0,
+              containsText: false,
+              translatedLanguage: lang,
+            },
+            warnings: [`Lỗi dịch sang ${lang}: ${error.message}`],
+          };
+        }
+      })
+    );
+
+    // Kiểm tra nếu tất cả ngôn ngữ đều thất bại
+    const allFailed = results.every((r) => !r.success);
+    if (allFailed) {
+      return res.status(422).json({
+        success: false,
+        error: 'Không thể dịch PDF cho bất kỳ ngôn ngữ nào',
+        code: 'TRANSLATION_ERROR',
+        details: results,
+      });
+    }
+
+    // Trả về kết quả
+    return res.json({
+      success: true,
+      data: results.map((r) => ({
+        language: r.language,
+        langName: r.langName,
+        translatedContent: r.translatedContent,
+        metadata: r.metadata,
+        warnings: r.warnings,
+        success: r.success,
+      })),
+    });
+  } catch (error) {
+    console.error('Lỗi controller translatePDF:', error);
+    const statusCode = error.code === 'PDF_PROCESSING_ERROR' ? 422 : 500;
+    return res.status(statusCode).json({
+      success: false,
+      error: error.message,
+      code: error.code || 'INTERNAL_ERROR',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    });
+  }
+}
+
+module.exports = { analyzePDF, translatePDF, translatePDFController };
