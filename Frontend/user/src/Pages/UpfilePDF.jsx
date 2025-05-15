@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileCheck2, Loader2, FileText, MoreVertical, Edit, Trash2, X } from 'lucide-react';
 import ApiService from '../api/api';
+import { motion } from 'framer-motion'
 
 const UpfilePDF = ({ onFileHistoryChange }) => {
+  // State management
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileHistory, setFileHistory] = useState([]);
   const [dragActive, setDragActive] = useState(false);
@@ -13,15 +15,22 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameFileId, setRenameFileId] = useState(null);
   const [newFileName, setNewFileName] = useState('');
+
+  // Refs
+  const historyRef = useRef(null);
+  const menuRefs = useRef([]);
   const navigate = useNavigate();
 
+  // Load file history from localStorage
   useEffect(() => {
     const loadHistory = () => {
       try {
         const savedHistory = localStorage.getItem('fileHistory');
         if (savedHistory) {
           const parsedHistory = JSON.parse(savedHistory);
-          if (Array.isArray(parsedHistory)) setFileHistory(parsedHistory);
+          if (Array.isArray(parsedHistory)) {
+            setFileHistory(parsedHistory);
+          }
         }
       } catch (error) {
         console.error('Error loading history:', error);
@@ -30,6 +39,7 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     loadHistory();
   }, []);
 
+  // Save file history to localStorage
   useEffect(() => {
     if (fileHistory.length > 0) {
       localStorage.setItem('fileHistory', JSON.stringify(fileHistory));
@@ -39,6 +49,10 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
 
   const handleFileProcessing = async (file) => {
     if (!file || file.type !== 'application/pdf' || isUploading) return;
+  // Handle file processing with backend API
+  const handleFileProcessing = async (file) => {
+    if (!file || !isValidFileType(file)) return;
+    if (isUploading) return;
 
     setSelectedFile(file);
     setIsUploading(true);
@@ -91,6 +105,29 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     } catch (error) {
       console.error('Processing error:', error);
       alert(`Error: ${error.message}`);
+      // Simulate progress (replace with actual progress events if needed)
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 300);
+
+      // Send to backend API
+      const result = await ApiService.analyzePDF(file, progressEvent => {
+        const progress = Math.round((progressEvent.loaded / progressEvent.total) * 90);
+        setUploadProgress(progress);
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      // Create new file entry
+      const newFileEntry = createFileEntry(file, result);
+      updateFileHistory(newFileEntry);
+
+      // Navigate to translation page
+      navigate('/translatepdf', { state: { file: newFileEntry } });
+    } catch (error) {
+      console.error('Processing error:', error);
+      alert(`Error: ${error.response?.data?.error || error.message}`);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -98,10 +135,30 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     }
   };
 
-  const updateFileHistory = (newEntry) => {
-    setFileHistory(prev => [newEntry, ...prev].slice(0, 50));
+
+  // Helper functions
+  const isValidFileType = (file) => {
+    return file?.type === 'application/pdf';
   };
 
+  const createFileEntry = (file, apiResult) => ({
+    id: Date.now() + Math.random().toString(36).substring(2, 9),
+    name: file.name,
+    uploadDate: new Date().toISOString(),
+    content: apiResult.originalText,
+    pages: [{ pageNumber: 1, content: apiResult.originalText }],
+    metadata: {
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    }
+  });
+
+  const updateFileHistory = (newEntry) => {
+    setFileHistory(prev => [newEntry, ...prev]);
+  };
+
+  // Event handlers
   const handleFileChange = async (e) => {
     await handleFileProcessing(e.target.files?.[0]);
     e.target.value = '';
@@ -110,10 +167,6 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
   const handleDrop = async (e) => {
     e.preventDefault();
     setDragActive(false);
-    if (e.dataTransfer.files.length > 1) {
-      alert('Only one file can be processed at a time.');
-      return;
-    }
     await handleFileProcessing(e.dataTransfer.files?.[0]);
   };
 
@@ -122,89 +175,229 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     setDragActive(e.type === 'dragenter' || e.type === 'dragover');
   };
 
-  const formatDate = (isoString) => (isoString ? new Date(isoString).toLocaleString() : '');
+  const formatDate = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toLocaleString();
+  };
 
   const handleRenameConfirm = () => {
-    if (!renameFileId || !newFileName.trim()) return;
-    setFileHistory(prev => prev.map(file => file.id === renameFileId ? { ...file, name: newFileName } : file));
+    if (!renameFileId || !newFileName) return;
+    setFileHistory(prev =>
+      prev.map(file =>
+        file.id === renameFileId ? { ...file, name: newFileName } : file
+      )
+    );
     setShowRenameModal(false);
-    setOpenMenuIndex(null);
   };
 
   const handleDelete = (id) => {
     setFileHistory(prev => prev.filter(file => file.id !== id));
-    setOpenMenuIndex(null);
   };
 
+  // Render
   return (
-    <section className="flex flex-col items-center py-8 px-4 min-h-screen">
+    <section className="flex flex-col items-center py-12 px-6 min-h-screen bg-gradient-to-b from-purple-100 to-white font-sans">
+      {/* Upload Area */}
       <div
-        className={`border-2 rounded-xl w-full md:w-3/4 lg:w-2/3 min-h-80 p-6 flex flex-col items-center justify-center text-center relative shadow-md transition-all duration-300 ${
-          dragActive ? 'border-blue-500 bg-blue-50' : isUploading ? 'border-blue-300 bg-blue-50' : selectedFile ? 'border-green-500 bg-green-50' : 'border-dashed border-gray-300 bg-white hover:border-gray-400'
-        }`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
+        className={`border-2 border-purple-200 rounded-3xl w-full max-w-[90%] min-h-[420px] p-12 flex flex-col items-center justify-center text-center bg-gradient-to-br from-purple-50/90 to-pink-50/90 backdrop-blur-md shadow-xl ${dragActive ? 'border-purple-300 bg-purple-100/90' :
+          isUploading ? 'border-pink-300 bg-pink-100/90' :
+            selectedFile ? 'border-pink-300 bg-pink-100/90' :
+              'hover:border-purple-300'
+          }`}
       >
-        <input type="file" id="file-upload" className="hidden" accept=".pdf" onChange={handleFileChange} disabled={isUploading} />
-        <div className="mb-6">
-          {isUploading ? <Loader2 className="animate-spin text-blue-500" size={48} /> : selectedFile ? <FileCheck2 className="text-green-500 animate-bounce" size={48} /> : <Upload className={`text-gray-400 ${dragActive ? 'animate-pulse' : ''}`} size={48} />}
+        <input
+          type="file"
+          id="file-upload"
+          className="hidden"
+          accept=".pdf"
+          onChange={handleFileChange}
+          disabled={isUploading}
+        />
+
+        <div className="mb-10">
+          {isUploading ? (
+            <Loader2 className="animate-spin text-purple-600" size={60} />
+          ) : selectedFile ? (
+            <FileCheck2 className="text-pink-500" size={60} />
+          ) : (
+            <Upload className="text-purple-500" size={60} />
+          )}
         </div>
+
         {isUploading ? (
-          <div className="w-full space-y-2">
-            <p className="font-medium">Uploading {selectedFile.name}</p>
-            <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div></div>
+          <div className="w-full max-w-lg space-y-5">
+            <p className="font-semibold text-purple-800 text-2xl tracking-tight">
+              Đang tải lên {selectedFile?.name}
+Resolving conflicts between Commit and main and committing changes  Commit
+1 conflicting file
+UpfilePDF.jsx
+Frontend/user/src/Pages/UpfilePDF.jsx
+Frontend/user/src/Pages/UpfilePDF.jsx
+            </p>
+            <div className="w-full bg-purple-100 rounded-full h-5 overflow-hidden shadow-inner">
+              <div
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-5 rounded-full"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
           </div>
         ) : selectedFile ? (
-          <p className="font-semibold">Ready to process</p>
+          <p className="font-semibold text-pink-600 text-2xl tracking-tight">
+            Tài liệu đã sẵn sàng để xử lý!
+          </p>
         ) : (
           <>
-            <p className="font-semibold">Drag & drop PDF or click to browse</p>
-            <p className="text-sm text-gray-500 mt-2">Supports PDF files only</p>
+            <p className="font-bold text-purple-900 text-3xl tracking-tight">
+              Kéo & thả PDF của bạn tại đây
+            </p>
+            <p className="text-lg text-gray-600 mt-4 max-w-xl leading-relaxed">
+              Hoặc nhấn để chọn tệp PDF (tối đa 50MB) và khám phá ngay!
+            </p>
           </>
         )}
-        <label htmlFor="file-upload" className={`mt-6 px-6 py-3 rounded-lg shadow-md flex items-center gap-2 cursor-pointer font-medium transition-all ${isUploading ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
-          {isUploading ? <Loader2 className="animate-spin" size={20} /> : <Upload size={20} />}
-          {isUploading ? 'Processing...' : 'Select File'}
+
+        <label
+          htmlFor="file-upload"
+          className={`mt-12 px-12 py-5 rounded-full shadow-xl flex items-center gap-5 cursor-pointer font-semibold text-xl bg-gradient-to-r ${isUploading
+            ? 'from-gray-300 to-gray-400 text-gray-600 cursor-not-allowed'
+            : 'from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+            }`}
+        >
+          {isUploading ? (
+            <Loader2 className="animate-spin" size={28} />
+          ) : (
+            <Upload size={28} />
+          )}
+          {isUploading ? 'Đang xử lý...' : 'Chọn tệp PDF'}
         </label>
       </div>
 
-      <div className="w-full md:w-4/5 lg:w-3/4 mt-8">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold mb-6">Your Documents</h2>
+      {/* File History */}
+      <div
+        ref={historyRef}
+        className="w-full max-w-6xl mt-16 mx-auto"
+      >
+        <div className="bg-gradient-to-br from-white to-purple-50/20 backdrop-blur-md rounded-3xl shadow-lg p-10 border border-purple-100/20">
+          <h2 className="text-5xl font-semibold text-purple-900 mb-10 text-center tracking-wide">
+
           {fileHistory.length === 0 ? (
-            <p className="text-gray-500 text-center">No documents yet</p>
+            <p className="text-gray-500 text-center text-xl font-light py-12 tracking-wide">
+              📁 Chưa có tài liệu nào được tìm thấy
+            Tài liệu đã tải lên
+          </h2>
+            </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {fileHistory.map((file, index) => (
-                <div key={file.id} className="relative p-4 bg-gray-50 rounded-lg border hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/translatepdf', { state: { file } })}>
-                  <div className="flex items-center gap-3 mb-3"><FileText className="text-blue-600 flex-shrink-0" /><span className="font-medium truncate">{file.name}</span></div>
-                  <div className="text-sm text-gray-600">{formatDate(file.uploadDate)}</div>
-                  <div className="text-xs text-gray-500 mt-1">{file.metadata?.pages || 0} pages</div>
-                  <div className="absolute top-2 right-2">
-                    <button className="p-1 hover:bg-gray-200 rounded-full" onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === index ? null : index); }}><MoreVertical size={18} /></button>
-                    {openMenuIndex === index && (
-                      <div className="absolute right-0 mt-1 w-40 bg-white shadow-lg rounded-md border z-10">
-                        <button className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center" onClick={(e) => { e.stopPropagation(); setRenameFileId(file.id); setNewFileName(file.name); setShowRenameModal(true); }}><Edit size={16} className="mr-2" /> Rename</button>
-                        <button className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center text-red-600" onClick={(e) => { e.stopPropagation(); handleDelete(file.id); }}><Trash2 size={16} className="mr-2" /> Delete</button>
+                <motion.div
+                  key={file.id}
+                  className="relative bg-white rounded-2xl border border-purple-100/30 hover:border-purple-200 hover:shadow-md transition-all duration-500 ease-out cursor-pointer group p-6"
+                  onClick={() => navigate('/translatepdf', { state: { file } })}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.08, duration: 0.5, ease: "easeOut" }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <FileText className="text-purple-600 flex-shrink-0" size={28} />
+                      <div className="min-w-0">
+                        <span className="font-medium text-purple-900 truncate block text-lg">
+                          {file.name}
+                        </span>
+                        <span className="text-xs text-gray-400 block mt-1">
+                          {formatDate(file.uploadDate)}
+                        </span>
                       </div>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="p-1.5 hover:bg-purple-50/50 rounded-full transition-colors duration-300 ease-out"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRenameFileId(file.id);
+                          setNewFileName(file.name);
+                          setShowRenameModal(true);
+                        }}
+                      >
+                        <Edit size={20} className="text-purple-600" />
+                      </button>
+                      <button
+                        className="p-1.5 hover:bg-red-50/50 rounded-full transition-colors duration-300 ease-out"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(file.id);
+                        }}
+                      >
+                        <Trash2 size={20} className="text-red-500" />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
         </div>
+
+        <style jsx>{`
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #fafaff;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #c4b5fd;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #a78bfa;
+    }
+  `}</style>
       </div>
 
+      {/* Rename Modal */}
       {showRenameModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4"><h3 className="text-lg font-semibold">Rename Document</h3><button onClick={() => setShowRenameModal(false)}><X size={24} /></button></div>
-            <input type="text" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} className="w-full p-2 border rounded mb-4" placeholder="New document name" />
-            <div className="flex justify-end gap-2"><button className="px-4 py-2 border rounded" onClick={() => setShowRenameModal(false)}>Cancel</button><button className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50" disabled={!newFileName.trim()} onClick={handleRenameConfirm}>Confirm</button></div>
-          </div>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 w-full max-w-md shadow-xl border border-purple-100/20"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-medium text-purple-900 tracking-wide">Đổi tên tài liệu</h3>
+              <button onClick={() => setShowRenameModal(false)}>
+                <X size={24} className="text-gray-500 hover:text-gray-700 transition-colors duration-300" />
+              </button>
+            </div>
+            <input
+              type="text"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              className="w-full p-4 border border-purple-100/50 rounded-xl bg-purple-50/20 text-purple-800 placeholder-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all duration-300"
+              placeholder="Tên tài liệu mới"
+            />
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                className="px-6 py-2.5 border border-purple-100/50 rounded-xl text-purple-700 text-base font-medium hover:bg-purple-50/30 transition-colors duration-300"
+                onClick={() => setShowRenameModal(false)}
+              >
+                Hủy
+              </button>
+              <buttonConfirm}
+              >
+                className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl text-base font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 transition-colors duration-300"
+                disabled={!newFileName.trim()}
+                onClick={handleRename
+                Xác nhận
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
     </section>

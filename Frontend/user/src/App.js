@@ -12,6 +12,7 @@ import Footer from "./components/Footer";
 import PricingPage from "./Pages/PricingPage";
 import ChatBotPage from "./Pages/ChatBotPage";
 import HomePage from "./Pages/HomePage"
+import TestimonialsSection from "./components/TestimonialsSection";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -65,7 +66,8 @@ export default function App() {
 
       <Routes>
         {/* Truyền cả currentUser và setCurrentUser cho ChatPDFPage */}
-        <Route path="/" element={<ChatPDFPage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+        <Route path="/" element={<HomePage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+        <Route path="/home" element={<HomePage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
         <Route path="/chatpdf" element={<ChatPDFPage />} />
         <Route path="upfilepdf" element={<UpfilePDF />} />
         <Route path="/translatepdf" element={<TranslatePDF />} />
@@ -74,9 +76,10 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/pricing" element={< PricingPage />} />
         <Route path="/chatbot" element={<ChatBotPage />} />
-        <Route path="/" element={<HomePage />} />
 
-        
+        <Route path="/testimonialsSection" element={<TestimonialsSection />} />
+
+
       </Routes>
 
       <Footer />

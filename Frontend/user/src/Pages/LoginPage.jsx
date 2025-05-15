@@ -1,11 +1,12 @@
 import React from 'react';
 import { FaGoogle, FaApple, FaMobileAlt, FaStar, FaUser, FaChrome, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/api';
 
 const LoginModal = ({ onClose, onShowRegister }) => {
   const handleGoogleLogin = () => {
     // Chuyển hướng đến endpoint Google OAuth
-    window.location.href = 'http://localhost:8080/auth/google';
+    window.location.href = `${API_BASE_URL}/auth/google?origin=/home`;
   };
 
   return (

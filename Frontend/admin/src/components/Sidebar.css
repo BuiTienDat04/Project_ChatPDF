@@ -12,15 +12,31 @@
   overflow-y: auto; 
 }
 
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
 .user-profile {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
+    display: flex;
+    align-items: center;
 }
 
 .user-info {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
+}
+
+.username-display {
+    font-weight: bold;
+}
+
+.user-email {
+    font-size: 0.8em;
+    color: #666;
 }
 
 .sidebar-nav ul {

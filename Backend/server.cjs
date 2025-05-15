@@ -1,4 +1,5 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
 const express = require('express');
 const pdfRoutes = require('./routes/pdfRoutes');
 const cors = require('./config/cors');
@@ -8,6 +9,8 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
+const getUserRoutes = require('./routes/getUser');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 const app = express();
 
@@ -18,6 +21,11 @@ connectDB().then(() => {
   console.error('Database connection error:', err);
 });
 
+// Sử dụng CORS từ file config
+app.use(cors);
+app.options('*', cors);
+
+// Middleware quan trọng
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -42,6 +50,8 @@ app.use('/api', pdfRoutes);
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
+app.use('/api/users', getUserRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err.stack);
