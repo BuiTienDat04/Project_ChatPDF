@@ -11,7 +11,6 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<AdminLogin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat-management" element={<ChatManagement />} />
