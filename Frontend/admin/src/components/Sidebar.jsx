@@ -45,7 +45,7 @@ const Sidebar = ({ user, onLogout }) => {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/auth/logout`, { withCredentials: true });
+      const response = await axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true });
       if (response.status === 200) {
         setCurrentUserDetails({
           _id: null,
@@ -57,7 +57,7 @@ const Sidebar = ({ user, onLogout }) => {
         if (onLogout) {
           onLogout();
         }
-        navigate('/', { replace: true });
+        navigate('/admin-login', { replace: true });
       } else {
         throw new Error(response.data.message || 'Đăng xuất thất bại');
       }
@@ -103,7 +103,7 @@ const Sidebar = ({ user, onLogout }) => {
           </li>
           <li>
             <Link to="/subscrible-management" className="nav-link">
-              <FaRegBell className="nav-icon" /> 
+              <FaRegBell className="nav-icon" />
               Quản lý đăng ký
             </Link>
           </li>

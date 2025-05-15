@@ -33,11 +33,11 @@ const AccountManagement = () => {
         setLoggedInUser(null);
         // Xử lý lỗi: nếu lỗi là 401, chuyển hướng về trang login
         if (error.response && error.response.status === 401) {
-           console.warn('Phiên hết hạn khi lấy thông tin user đăng nhập. Chuyển hướng về trang đăng nhập.');
-           navigate('/admin-login');
+          console.warn('Phiên hết hạn khi lấy thông tin user đăng nhập. Chuyển hướng về trang đăng nhập.');
+          navigate('/admin-login');
         }
       } finally {
-          setLoadingUser(false); // Đặt loading user = false sau khi fetch xong
+        setLoadingUser(false); // Đặt loading user = false sau khi fetch xong
       }
     };
     fetchLoggedInUser();
@@ -52,10 +52,10 @@ const AccountManagement = () => {
         setUsers(response.data);
       } catch (error) {
         console.error('Lỗi khi tải danh sách người dùng:', error);
-         // Xử lý lỗi 401 cho danh sách user: chuyển hướng về login
+        // Xử lý lỗi 401 cho danh sách user: chuyển hướng về login
         if (error.response && error.response.status === 401) {
-             console.warn('Phiên hết hạn khi tải danh sách người dùng. Chuyển hướng về trang đăng nhập.');
-             navigate('/admin-login');
+          console.warn('Phiên hết hạn khi tải danh sách người dùng. Chuyển hướng về trang đăng nhập.');
+          navigate('/admin-login');
         }
       } finally {
         // Đặt loading danh sách user = false sau khi fetch xong
@@ -65,6 +65,12 @@ const AccountManagement = () => {
 
     // Gọi hàm fetch danh sách users
     fetchUsers();
+
+    // ✅ Khai báo và gán interval
+    const intervalId = setInterval(fetchUsers, 5000);
+
+    // ✅ Dọn dẹp interval khi component unmount
+    return () => clearInterval(intervalId);
 
   }, [navigate]); // Thêm navigate vào dependency array
 
@@ -77,8 +83,8 @@ const AccountManagement = () => {
   // Hiển thị loading hoặc lỗi nếu cần (có thể kết hợp loadingUser và loading)
   // Ví dụ: chỉ hiển thị nội dung khi cả 2 đều không loading
   if (loadingUser || loading) {
-      // Bạn có thể hiển thị loading spinner hoặc thông báo phù hợp
-       return <div className="flex min-h-screen w-full items-center justify-center">Đang tải dữ liệu quản lý tài khoản...</div>;
+    // Bạn có thể hiển thị loading spinner hoặc thông báo phù hợp
+    return <div className="flex min-h-screen w-full items-center justify-center">Đang tải dữ liệu quản lý tài khoản...</div>;
   }
 
   // Có thể thêm kiểm tra nếu user đăng nhập là null sau khi loadingUser=false
@@ -121,37 +127,37 @@ const AccountManagement = () => {
         {/* {loading ? ( // Loading cho danh sách users đã được xử lý ở trên cùng
           // <p className="text-gray-500">Đang tải dữ liệu...</p>
         ) : ( */}
-          <div className="space-y-4">
-            {filteredUsers.map((user, index) => (
-              <div
-                key={user._id || index}
-                className="flex items-center bg-gray-200 p-4 rounded-lg shadow hover:shadow-md transition"
-              >
-                <img
-                  src={user.picture || 'https://via.placeholder.com/40'}
-                  alt={user.fullName}
-                  className="w-12 h-12 rounded-full mr-4 object-cover"
-                />
-                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-800">
-                  <div><span className="font-medium">Họ tên:</span> {user.fullName}</div>
-                  <div><span className="font-medium">Email:</span> {user.email}</div>
-                  <div><span className="font-medium">Ngày sinh:</span> {user.birthday || '-'}</div>
-                  <div><span className="font-medium">Vai trò:</span> {user.role || '-'}</div>
-                  <div>
-                    <span className="font-medium">Trạng thái:</span>{' '}
-                    {user.statusOnline ? (
-                      <span className="text-green-600">Online</span>
-                    ) : (
-                      <span className="text-red-600">Offline</span>
-                    )}
-                  </div>
+        <div className="space-y-4">
+          {filteredUsers.map((user, index) => (
+            <div
+              key={user._id || index}
+              className="flex items-center bg-gray-200 p-4 rounded-lg shadow hover:shadow-md transition"
+            >
+              <img
+                src={user.picture || 'https://via.placeholder.com/40'}
+                alt={user.fullName}
+                className="w-12 h-12 rounded-full mr-4 object-cover"
+              />
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-800">
+                <div><span className="font-medium">Họ tên:</span> {user.fullName}</div>
+                <div><span className="font-medium">Email:</span> {user.email}</div>
+                <div><span className="font-medium">Ngày sinh:</span> {user.birthday || '-'}</div>
+                <div><span className="font-medium">Vai trò:</span> {user.role || '-'}</div>
+                <div>
+                  <span className="font-medium">Trạng thái:</span>{' '}
+                  {user.statusOnline ? (
+                    <span className="text-green-600">Online</span>
+                  ) : (
+                    <span className="text-red-600">Offline</span>
+                  )}
                 </div>
               </div>
-            ))}
-            {filteredUsers.length === 0 && (
-              <p className="text-gray-500">Không tìm thấy người dùng phù hợp.</p>
-            )}
-          </div>
+            </div>
+          ))}
+          {filteredUsers.length === 0 && (
+            <p className="text-gray-500">Không tìm thấy người dùng phù hợp.</p>
+          )}
+        </div>
         {/* )} */} {/* Đóng ngoặc loading ban đầu */}
       </div>
     </div>
