@@ -37,56 +37,66 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     }
   }, [fileHistory, onFileHistoryChange]);
 
- const handleFileProcessing = async (file) => {
-  if (!file || file.type !== 'application/pdf' || isUploading) return;
+  const handleFileProcessing = async (file) => {
+    if (!file || file.type !== 'application/pdf' || isUploading) return;
 
-  setSelectedFile(file);
-  setIsUploading(true);
-  setUploadProgress(0);
-
-  try {
-    const result = await ApiService.analyzePDF(file);
-    setUploadProgress(100);
-
-    console.log('Backend response:', JSON.stringify(result, null, 2));
-
-    if (!result?.success) throw new Error('Invalid response from server');
-
-    const { content = {}, images = [], metadata = {} } = result.data || {};
-    const newFileEntry = {
-      id: Date.now() + Math.random().toString(36).substring(2, 9),
-      name: file.name,
-      uploadDate: new Date().toISOString(),
-      content: content,
-      sections: content.sections || [],
-      pages: content.pages || [],
-      images: images.map(img => ({
-        ...img,
-        data: img.data || img.base64 || '',
-        page: img.page || 1,
-      })),
-      metadata: {
-        ...metadata,
-        fileInfo: {
-          size: file.size,
-          type: file.type,
-          lastModified: file.lastModified,
-        },
-      },
-    };
-
-    console.log('New file entry sections:', JSON.stringify(newFileEntry.sections, null, 2));
-    updateFileHistory(newFileEntry);
-    navigate('/translatepdf', { state: { file: newFileEntry } });
-  } catch (error) {
-    console.error('Processing error:', error);
-    alert(`Error: ${error.message}`);
-  } finally {
-    setIsUploading(false);
+    setSelectedFile(file);
+    setIsUploading(true);
     setUploadProgress(0);
-    setSelectedFile(null);
-  }
-};
+
+    try {
+      const result = await ApiService.analyzePDF(file);
+      setUploadProgress(100);
+
+      console.log('Backend response:', JSON.stringify(result, null, 2));
+
+      if (!result?.success) throw new Error('Invalid response from server');
+
+      const { content = {}, images = [], metadata = {} } = result.data || {};
+
+      // Chuyển file PDF thành base64 để lưu
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      const base64Data = await base64Promise;
+
+      const newFileEntry = {
+        id: Date.now() + Math.random().toString(36).substring(2, 9),
+        name: file.name,
+        uploadDate: new Date().toISOString(),
+        content: content,
+        sections: content.sections || [],
+        pages: content.pages || [],
+        images: images.map(img => ({
+          ...img,
+          data: img.data || img.base64 || '',
+          page: img.page || 1,
+        })),
+        metadata: {
+          ...metadata,
+          fileInfo: {
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified,
+            data: base64Data, // Lưu base64 của file PDF
+          },
+        },
+      };
+
+      console.log('New file entry sections:', JSON.stringify(newFileEntry.sections, null, 2));
+      updateFileHistory(newFileEntry);
+      navigate('/translatepdf', { state: { file: newFileEntry } });
+    } catch (error) {
+      console.error('Processing error:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setSelectedFile(null);
+    }
+  };
 
   const updateFileHistory = (newEntry) => {
     setFileHistory(prev => [newEntry, ...prev].slice(0, 50));
@@ -201,4 +211,4 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
   );
 };
 
-export default UpfilePDF;
+export default UpfilePDF; 
