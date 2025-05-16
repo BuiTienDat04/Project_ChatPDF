@@ -1,50 +1,26 @@
-const express = require('express');
-const router = express.Router();
-const { handleChatMessage } = require('../services/chatServices');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Endpoint kiểm tra trạng thái chat
-router.get('/', (req, res) => {
-  res.json({ success: true, message: 'Chat endpoint ready' });
-});
+// Khởi tạo Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-// Endpoint gửi tin nhắn và nhận phản hồi từ Gemini
-router.post('/message', async (req, res) => {
+// Gọi Gemini để xử lý tin nhắn
+const callGeminiAPI = async (message, context) => {
   try {
-    const { fileId, sender, content } = req.body;
+    const prompt = context
+      ? `Dựa trên nội dung sau:\n${context}\nNgười dùng hỏi: ${message}\nTrả lời:`
+      : `Người dùng hỏi: ${message}\nTrả lời:`;
 
-    if (!fileId || !sender || !content) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing fileId, sender, or content',
-        code: 'MISSING_FIELDS',
-      });
-    }
-
-    // Gọi handleChatMessage để xử lý tin nhắn
-    const result = await handleChatMessage(fileId, sender, content, null);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        message: 'Message processed',
-        userMessage: result.userMessage,
-        systemMessage: result.systemMessage,
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        error: result.error,
-        errorMessage: result.errorMessage,
-      });
-    }
+    console.log(`Prompt gửi đi: ${prompt.slice(0, 100)}...`);
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+    console.log(`Kết quả từ Gemini: ${response.slice(0, 100)}...`);
+    return response;
   } catch (error) {
-    console.error('Lỗi xử lý tin nhắn qua HTTP:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to process message',
-      code: 'CHAT_PROCESSING_ERROR',
-    });
+    console.error('Lỗi gọi API Gemini:', error);
+    return 'Xin lỗi, tôi không thể trả lời ngay bây giờ. Vui lòng thử lại sau!';
   }
-});
+};
 
-module.exports = router;
+// Export callGeminiAPI
+module.exports = { callGeminiAPI };
