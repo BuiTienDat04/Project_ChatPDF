@@ -3,87 +3,31 @@ const { performance } = require('perf_hooks');
 const pdfjs = require('pdfjs-dist');
 const path = require('path');
 const { extractImagesFromPDF, extractTextWithStructure } = require('../utils/pdfUtils');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { translatePDF, languageMap } = require('../utils/translateUtils');
 
-// Khởi tạo Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-// Debug API key
-console.log('GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Đã thiết lập' : 'Chưa thiết lập');
-
-// Ánh xạ mã ngôn ngữ sang tên đầy đủ (ISO 639-1)
-const languageMap = {
-  en: 'English',
-  vi: 'Vietnamese',
-  fr: 'French',
-  de: 'German',
-  ja: 'Japanese',
-  ko: 'Korean',
-  zh: 'Chinese (Simplified)',
-  ru: 'Russian',
-  es: 'Spanish',
-  it: 'Italian',
-  pt: 'Portuguese',
-  ar: 'Arabic',
-  hi: 'Hindi',
-  th: 'Thai',
-  nl: 'Dutch',
-  sv: 'Swedish',
-  pl: 'Polish',
-  tr: 'Turkish',
-};
-
-/**
- * Kiểm tra tính hợp lệ của buffer PDF
- * @param {Buffer} buffer - Buffer của file PDF
- * @returns {string|null} - Lỗi nếu có, null nếu hợp lệ
- */
 function validatePDFBuffer(buffer) {
-  if (!buffer || buffer.length === 0) {
-    return 'Tệp PDF trống';
-  }
-  if (!buffer.toString('utf8', 0, 5).startsWith('%PDF-')) {
-    return 'Tệp không phải định dạng PDF hợp lệ';
-  }
+  if (!buffer || buffer.length === 0) return 'Tệp PDF trống';
+  if (!buffer.toString('utf8', 0, 5).startsWith('%PDF-')) return 'Tệp không phải định dạng PDF hợp lệ';
   return null;
 }
 
-/**
- * Kiểm tra xem một đoạn văn bản có phải là tiêu đề
- * @param {string} text - Văn bản cần kiểm tra
- * @param {number} fontSize - Kích thước font
- * @param {number} avgFontSize - Kích thước font trung bình
- * @param {number} index - Vị trí đoạn văn
- * @param {number} totalItems - Tổng số đoạn văn
- * @returns {boolean}
- */
 function isHeading(text, fontSize, avgFontSize, index, totalItems) {
   text = text.trim();
   if (!text) return false;
-
   const isLargerFont = fontSize > avgFontSize * 1.2;
   const isFirstLine = index < 3;
   const isNumbered = /^\d+[.)]\s+/.test(text);
   const isUppercase = text === text.toUpperCase() && text.length < 100;
   const isShort = text.length < 150 && !/[.,;!?]$/.test(text);
-
   return isLargerFont || isFirstLine || isNumbered || (isUppercase && isShort);
 }
 
-/**
- * Kiểm tra xem PDF có chứa ảnh
- * @param {PDFDocumentProxy} pdf
- * @returns {Promise<boolean>}
- */
 async function hasImages(pdf) {
   for (let i = 1; i <= pdf.numPages; i++) {
     try {
       const page = await pdf.getPage(i);
       const ops = await page.getOperatorList();
-      const hasInline = ops.fnArray.includes(pdfjs.OPS.paintInlineImage) ||
-                        ops.fnArray.includes(pdfjs.OPS.paintImageXObject) ||
-                        ops.fnArray.includes(pdfjs.OPS.paintJpegXObject);
+      const hasInline = ops.fnArray.includes(pdfjs.OPS.paintInlineImage) || ops.fnArray.includes(pdfjs.OPS.paintImageXObject) || ops.fnArray.includes(pdfjs.OPS.paintJpegXObject);
       const resources = page.commonObjs.resources || {};
       const xObjects = resources.XObject || {};
       const hasXObject = Object.values(xObjects).some(obj => obj.Subtype?.value === 'Image');
@@ -99,64 +43,45 @@ async function hasImages(pdf) {
   return false;
 }
 
-/**
- * Xử lý một trang PDF để trích xuất các phần cấu trúc
- * @param {PDFDocumentProxy} pdf - Tài liệu PDF
- * @param {number} pageNum - Số trang
- * @param {object} structuredText - Văn bản có cấu trúc
- * @returns {Promise<{pageSections: Array, warnings: Array}>}
- */
 async function processPage(pdf, pageNum, structuredText) {
   let warnings = [];
   let pageSections = [];
-
   try {
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
-
     console.log(`Số mục nội dung văn bản trên trang ${pageNum}:`, textContent.items.length);
-
     const pageParagraphs = structuredText.paragraphs.filter((para, idx) => {
       const paraPage = Math.floor(idx / (structuredText.paragraphs.length / pdf.numPages)) + 1;
       return paraPage === pageNum;
     });
-
     if (textContent.items.length === 0 && pageParagraphs.length === 0) {
       warnings.push(`Không trích xuất được văn bản từ trang ${pageNum}`);
       pageSections.push({ type: 'text', content: 'Không trích xuất được văn bản', page: pageNum });
     } else {
       textContent.items.sort((a, b) => b.transform[5] - a.transform[5]);
-
       const fontSizes = textContent.items.map(item => item.height || 0).filter(size => size > 0);
       const avgFontSize = fontSizes.length ? fontSizes.reduce((sum, size) => sum + size, 0) / fontSizes.length : 12;
-
       let currentSection = { type: 'text', content: '', page: pageNum };
       let lastFontSize = 0;
       let lastY = null;
       let lineSpacing = 0;
-
       textContent.items.forEach((item, index) => {
         const text = item.str.trim();
         if (!text) return;
-
         const fontSize = item.height || 12;
         const currentY = item.transform[5];
-
         if (lastY !== null) {
           const spacing = Math.abs(lastY - currentY);
           if (spacing > 0) lineSpacing = Math.max(lineSpacing, spacing);
         }
         lastY = currentY;
-
         const isLargerFont = fontSize > Math.max(lastFontSize * 1.2, avgFontSize * 1.1);
         const hasLargeSpacing = lastY !== null && Math.abs(lastY - currentY) > lineSpacing * 1.5;
         const isNewSection = isLargerFont || hasLargeSpacing || index === 0;
-
         if (isNewSection && currentSection.content.trim()) {
           pageSections.push({ ...currentSection });
           currentSection = { type: 'text', content: '', page: pageNum };
         }
-
         if (isNewSection && isHeading(text, fontSize, avgFontSize, index, textContent.items.length)) {
           if (currentSection.content.trim()) pageSections.push({ ...currentSection });
           pageSections.push({ type: 'heading', content: text, page: pageNum });
@@ -191,14 +116,11 @@ async function processPage(pdf, pageNum, structuredText) {
           }
           currentSection.content += text + (item.hasEOL ? '\n' : ' ');
         }
-
         lastFontSize = fontSize;
       });
-
       if (currentSection.content?.trim() || (currentSection.items && currentSection.items.length > 0)) {
         pageSections.push({ ...currentSection });
       }
-
       const mergedSections = [];
       let lastSection = null;
       for (const section of pageSections) {
@@ -211,7 +133,6 @@ async function processPage(pdf, pageNum, structuredText) {
       }
       if (lastSection) mergedSections.push(lastSection);
       pageSections = mergedSections;
-
       if (pageSections.length === 0 && pageParagraphs.length > 0) {
         pageSections = pageParagraphs.map((para, idx) => ({
           type: isHeading(para, 14, 12, idx, pageParagraphs.length) ? 'heading' : 'text',
@@ -220,30 +141,18 @@ async function processPage(pdf, pageNum, structuredText) {
         }));
       }
     }
-
     return { pageSections, warnings };
   } catch (error) {
     console.error(`Lỗi xử lý trang ${pageNum}:`, error);
     warnings.push(`Lỗi xử lý trang ${pageNum}: ${error.message}`);
-    return {
-      pageSections: [{ type: 'error', content: `Lỗi: ${error.message}`, page: pageNum }],
-      warnings,
-    };
+    return { pageSections: [{ type: 'error', content: `Lỗi: ${error.message}`, page: pageNum }], warnings };
   }
 }
 
-/**
- * Phân tích PDF để trích xuất nội dung gốc
- * @param {Buffer} pdfBuffer - Buffer của file PDF
- * @param {number} maxImagesPerPage - Số lượng hình ảnh tối đa mỗi trang
- * @returns {Promise<object>} Kết quả phân tích
- */
 async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
   const startTime = performance.now();
   let warnings = [];
-
   try {
-    // Trích xuất văn bản
     let structuredText;
     try {
       structuredText = await extractTextWithStructure(pdfBuffer);
@@ -253,7 +162,6 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
       console.warn('Cảnh báo trích xuất văn bản:', textErr);
       structuredText = { text: '', paragraphs: [], pages: 0 };
     }
-
     const pdf = await pdfjs.getDocument({
       data: pdfBuffer,
       disableWorker: true,
@@ -261,36 +169,21 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
       cMapUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/cmaps/'),
       cMapPacked: true,
     }).promise;
-
-    let content = {
-      sections: [],
-      pages: [],
-      text: structuredText.text || '',
-      paragraphs: structuredText.paragraphs || [],
-    };
-
+    let content = { sections: [], pages: [], text: structuredText.text || '', paragraphs: structuredText.paragraphs || [] };
     let images = [];
-
-    // Trích xuất ảnh
     try {
       console.log('Bắt đầu trích xuất ảnh...');
       const extractedImages = await extractImagesFromPDF(pdfBuffer);
       console.log(`Trích xuất thành công ${extractedImages.length} ảnh`);
-
       const sourceCounts = extractedImages.reduce((acc, img) => {
         acc[img.source] = (acc[img.source] || 0) + 1;
         return acc;
       }, {});
       console.log('Nguồn ảnh:', sourceCounts);
-
-      const filteredImages = extractedImages.filter(img =>
-        img.dimensions && (img.dimensions.width > 30 && img.dimensions.height > 30)
-      );
-
+      const filteredImages = extractedImages.filter(img => img.dimensions && (img.dimensions.width > 30 && img.dimensions.height > 30));
       if (filteredImages.length < extractedImages.length) {
         console.log(`Đã lọc bỏ ${extractedImages.length - filteredImages.length} ảnh nhỏ`);
       }
-
       images = filteredImages.map(img => ({
         data: img.data,
         width: img.dimensions?.width || 0,
@@ -301,35 +194,24 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
         source: img.source || 'unknown',
         sizeKB: img.sizeKB || 0,
       }));
-
       if (images.length > maxImagesPerPage * pdf.numPages) {
         images = images.slice(0, maxImagesPerPage * pdf.numPages);
         console.log(`Giới hạn ảnh còn ${images.length} (${maxImagesPerPage} mỗi trang)`);
       }
-
       console.log(`Số lượng ảnh cuối cùng: ${images.length}`);
     } catch (imgError) {
       warnings.push(`Không thể trích xuất ảnh: ${imgError.message}`);
       console.error('Lỗi trích xuất ảnh:', imgError);
     }
-
-    // Xử lý từng trang
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       try {
         const { pageSections } = await processPage(pdf, pageNum, structuredText);
         const pageImages = images.filter(img => img.page === pageNum);
-
-        content.pages.push({
-          pageNumber: pageNum,
-          sections: pageSections,
-          images: pageImages,
-        });
-
+        content.pages.push({ pageNumber: pageNum, sections: pageSections, images: pageImages });
         content.sections = content.sections.concat(pageSections);
       } catch (pageError) {
         console.error(`Lỗi xử lý trang ${pageNum}:`, pageError);
         warnings.push(`Lỗi trên trang ${pageNum}: ${pageError.message}`);
-
         content.pages.push({
           pageNumber: pageNum,
           sections: [{ type: 'error', content: `Lỗi: ${pageError.message}`, page: pageNum }],
@@ -337,37 +219,24 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
         });
       }
     }
-
-    // Fallback nếu sections rỗng
     if (content.sections.length === 0 && structuredText.paragraphs.length > 0) {
       console.log('Sử dụng văn bản có cấu trúc để tạo sections');
       content.sections = structuredText.paragraphs.map((para, index) => {
         const page = Math.floor(index / (structuredText.paragraphs.length / pdf.numPages)) + 1;
-        return {
-          type: isHeading(para, 14, 12, index, structuredText.paragraphs.length) ? 'heading' : 'text',
-          content: para,
-          page: page,
-        };
+        return { type: isHeading(para, 14, 12, index, structuredText.paragraphs.length) ? 'heading' : 'text', content: para, page };
       });
-
       content.pages = [];
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const pageSections = content.sections.filter(section => section.page === pageNum);
         const pageImages = images.filter(img => img.page === pageNum);
-        content.pages.push({
-          pageNumber: pageNum,
-          sections: pageSections,
-          images: pageImages,
-        });
+        content.pages.push({ pageNumber: pageNum, sections: pageSections, images: pageImages });
       }
     }
-
     const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
-
     return {
       success: true,
-      content: content,
-      images: images,
+      content,
+      images,
       metadata: {
         processingTime: `${processingTime}s`,
         pages: pdf.numPages,
@@ -380,174 +249,51 @@ async function analyzePDF(pdfBuffer, maxImagesPerPage = 5) {
   } catch (error) {
     console.error('Lỗi xử lý PDF:', error);
     const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
-
     warnings.push(`Lỗi xử lý PDF: ${error.message}`);
     return {
       success: false,
       content: { text: '', sections: [], paragraphs: [], pages: [] },
       images: [],
-      metadata: {
-        processingTime: processingTime,
-        pages: 0,
-        imageCount: 0,
-        containsText: false,
-        containsImages: false,
-      },
-      warnings: warnings,
+      metadata: { processingTime, pages: 0, imageCount: 0, containsText: false, containsImages: false },
+      warnings,
     };
   }
 }
 
-/**
- * Dịch văn bản đã trích xuất từ PDF
- * @param {object} structuredText - Văn bản đã trích xuất từ PDF
- * @param {string} targetLang - Mã ngôn ngữ mục tiêu (ví dụ: 'en', 'vi')
- * @param {string} langName - Tên ngôn ngữ đầy đủ (ví dụ: 'English', 'Vietnamese')
- * @returns {Promise<object>} Văn bản đã dịch
- */
-async function translatePDF(structuredText, targetLang = 'en', langName = 'English') {
-  const startTime = performance.now();
-  let warnings = [];
-
-  // Chuẩn hóa mã ngôn ngữ
-  targetLang = targetLang.toLowerCase();
-  const effectiveLangName = languageMap[targetLang] || langName || targetLang;
-  console.log(`Bắt đầu dịch sang ${effectiveLangName} (${targetLang})`);
-
-  try {
-    // Kiểm tra structuredText
-    if (!structuredText || !structuredText.text) {
-      warnings.push('Không có văn bản để dịch');
-      console.log('Không tìm thấy văn bản trong structuredText');
-      throw new Error('Không có văn bản để dịch');
-    }
-
-    // Dịch văn bản
-    let translatedText = '';
-    let translatedParagraphs = [];
-    try {
-      const prompt = `Translate the following text to ${effectiveLangName} naturally and accurately:\n${structuredText.text}`;
-      console.log(`Prompt gửi đi: ${prompt.slice(0, 100)}...`);
-      const result = await model.generateContent(prompt);
-      translatedText = result.response.text();
-      console.log(`Kết quả dịch (text): ${translatedText.slice(0, 100)}...`);
-
-      translatedParagraphs = await Promise.all(
-        structuredText.paragraphs.map(async (para, index) => {
-          if (!para) return '';
-          const paraPrompt = `Translate the following text to ${effectiveLangName} naturally and accurately:\n${para}`;
-          console.log(`Dịch đoạn ${index + 1}/${structuredText.paragraphs.length} sang ${effectiveLangName}`);
-          const paraResult = await model.generateContent(paraPrompt);
-          return paraResult.response.text();
-        })
-      );
-      console.log(`Đã dịch ${translatedParagraphs.length} đoạn văn sang ${effectiveLangName}`);
-    } catch (translationErr) {
-      warnings.push(`Lỗi dịch văn bản sang ${effectiveLangName}: ${translationErr.message}`);
-      console.error('Lỗi dịch:', translationErr);
-      throw new Error(`Không thể dịch văn bản: ${translationErr.message}`);
-    }
-
-    const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
-
-    return {
-      success: true,
-      translatedContent: {
-        text: translatedText,
-        paragraphs: translatedParagraphs,
-      },
-      metadata: {
-        processingTime: `${processingTime}s`,
-        pages: structuredText.pages || 0,
-        containsText: structuredText.text.length > 0,
-        translatedLanguage: targetLang,
-      },
-      warnings: warnings.length > 0 ? warnings : undefined,
-    };
-  } catch (error) {
-    console.error(`Lỗi dịch PDF sang ${effectiveLangName}:`, error);
-    const processingTime = ((performance.now() - startTime) / 1000).toFixed(2);
-
-    warnings.push(`Lỗi dịch PDF: ${error.message}`);
-    return {
-      success: false,
-      translatedContent: { text: '', paragraphs: [] },
-      metadata: {
-        processingTime: processingTime,
-        pages: 0,
-        containsText: false,
-        translatedLanguage: targetLang,
-      },
-      warnings: warnings,
-    };
-  }
-}
-
-/**
- * Controller để dịch PDF
- */
 async function translatePDFController(req, res, next) {
   console.log('Nhận yêu cầu tới /api/Translatepdf');
   try {
     if (!req.file) {
       console.log('Không có tệp được tải lên');
-      return res.status(400).json({
-        success: false,
-        error: 'Không có tệp được tải lên',
-        code: 'NO_FILE',
-      });
+      return res.status(400).json({ success: false, error: 'Không có tệp được tải lên', code: 'NO_FILE' });
     }
-
     const validationError = validatePDFBuffer(req.file.buffer);
     if (validationError) {
       console.log('Lỗi xác thực:', validationError);
-      return res.status(400).json({
-        success: false,
-        error: validationError,
-        code: 'INVALID_PDF',
-      });
+      return res.status(400).json({ success: false, error: validationError, code: 'INVALID_PDF' });
     }
-
-    // Trích xuất văn bản một lần
     let structuredText;
     try {
       structuredText = await extractTextWithStructure(req.file.buffer);
       console.log(`Trích xuất ${structuredText.paragraphs.length} đoạn văn`);
     } catch (textErr) {
       console.error('Lỗi trích xuất văn bản:', textErr);
-      return res.status(422).json({
-        success: false,
-        error: `Không thể trích xuất văn bản: ${textErr.message}`,
-        code: 'TEXT_EXTRACTION_ERROR',
-      });
+      return res.status(422).json({ success: false, error: `Không thể trích xuất văn bản: ${textErr.message}`, code: 'TEXT_EXTRACTION_ERROR' });
     }
-
-    // Lấy danh sách ngôn ngữ từ yêu cầu
     let targetLangs = req.body.targetLangs || req.query.targetLangs || [req.body.language || 'en'];
     let langNames = req.body.langNames || req.query.langNames || [];
-    if (typeof targetLangs === 'string') {
-      targetLangs = targetLangs.split(',').map(lang => lang.trim().toLowerCase());
-    }
-    if (typeof langNames === 'string') {
-      langNames = langNames.split(',').map(name => name.trim());
-    }
+    if (typeof targetLangs === 'string') targetLangs = targetLangs.split(',').map(lang => lang.trim().toLowerCase());
+    if (typeof langNames === 'string') langNames = langNames.split(',').map(name => name.trim());
     if (!Array.isArray(targetLangs) || targetLangs.length === 0) {
       console.log('Danh sách ngôn ngữ không hợp lệ');
-      return res.status(400).json({
-        success: false,
-        error: 'Danh sách ngôn ngữ không hợp lệ',
-        code: 'INVALID_LANGUAGES',
-      });
+      return res.status(400).json({ success: false, error: 'Danh sách ngôn ngữ không hợp lệ', code: 'INVALID_LANGUAGES' });
     }
-
     console.log('Ngôn ngữ yêu cầu:', targetLangs);
     console.log('Tên ngôn ngữ:', langNames);
-
-    // Dịch sang từng ngôn ngữ
     const results = await Promise.all(
       targetLangs.map(async (lang, index) => {
+        const langName = langNames[index] || languageMap[lang] || lang;
         try {
-          const langName = langNames[index] || languageMap[lang] || lang;
           const result = await translatePDF(structuredText, lang, langName);
           return { language: lang, langName, ...result };
         } catch (error) {
@@ -557,19 +303,12 @@ async function translatePDFController(req, res, next) {
             langName: langNames[index] || lang,
             success: false,
             translatedContent: { text: '', paragraphs: [] },
-            metadata: {
-              processingTime: '0s',
-              pages: 0,
-              containsText: false,
-              translatedLanguage: lang,
-            },
+            metadata: { processingTime: '0s', pages: 0, containsText: false, translatedLanguage: lang },
             warnings: [`Lỗi dịch sang ${lang}: ${error.message}`],
           };
         }
       })
     );
-
-    // Kiểm tra nếu tất cả ngôn ngữ đều thất bại
     const allFailed = results.every((r) => !r.success);
     if (allFailed) {
       return res.status(422).json({
@@ -579,8 +318,6 @@ async function translatePDFController(req, res, next) {
         details: results,
       });
     }
-
-    // Trả về kết quả
     return res.json({
       success: true,
       data: results.map((r) => ({
@@ -604,4 +341,4 @@ async function translatePDFController(req, res, next) {
   }
 }
 
-module.exports = { analyzePDF, translatePDF, translatePDFController };
+module.exports = { analyzePDF, translatePDFController };
