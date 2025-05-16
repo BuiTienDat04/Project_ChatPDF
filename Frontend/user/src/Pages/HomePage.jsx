@@ -1,11 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
 import { MessageCircle, FileText, Globe, Star, Zap, BookOpen, Rocket } from 'lucide-react';
 
 const HomePage = ({ currentUser, setCurrentUser }) => {
-  // Thêm logic xử lý nếu cần dựa trên currentUser (ví dụ: hiển thị nút nếu đã đăng nhập)
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-100 font-sans">
       <main className="pt-20 w-full relative z-10">
@@ -209,7 +207,7 @@ const HomePage = ({ currentUser, setCurrentUser }) => {
                 Phá vỡ rào cản ngôn ngữ! Tải lên PDF, chọn từ hơn 100 ngôn ngữ, và nhận bản dịch chính xác, giữ nguyên định dạng – từ hợp đồng đến giáo trình, chỉ trong vài giây.
               </p>
               <Link
-                to="/pdf-chat" // Thay đổi từ "/chatpdf" thành "/pdf-chat" để nhất quán
+                to="/pdf-chat"
                 className="px-8 py-3 bg-purple-500 text-white font-semibold rounded-full shadow-md
                   transition-all duration-300 hover:bg-purple-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-300 animate-fade-in"
                 style={{ animationDelay: '0.6s' }}
@@ -312,8 +310,6 @@ const HomePage = ({ currentUser, setCurrentUser }) => {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 };

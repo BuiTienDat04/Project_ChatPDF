@@ -20,7 +20,6 @@ router.post('/message', async (req, res) => {
       });
     }
 
-    // Gọi handleChatMessage để xử lý tin nhắn
     const result = await handleChatMessage(fileId, sender, content, null);
 
     if (result.success) {
