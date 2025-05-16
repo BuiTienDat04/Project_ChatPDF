@@ -4,6 +4,14 @@ import Navigation from '../components/Navigation';
 import { MessageCircle, FileText, Globe, Star, Zap, BookOpen, Rocket } from 'lucide-react';
 
 const HomePage = ({ currentUser, setCurrentUser }) => {
+  // Hàm cuộn mượt mà đến section "features"
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-100 font-sans">
       <main className="pt-20 w-full relative z-10">
@@ -60,7 +68,10 @@ const HomePage = ({ currentUser, setCurrentUser }) => {
                   Dịch PDF
                 </Link>
               </div>
-              <div className="flex flex-col items-center text-purple-500 mt-16 animate-pulse">
+              <div
+                className="flex flex-col items-center text-purple-500 mt-16 animate-pulse cursor-pointer"
+                onClick={scrollToFeatures}
+              >
                 <svg
                   className="w-6 h-6 mb-2"
                   fill="none"
@@ -82,7 +93,7 @@ const HomePage = ({ currentUser, setCurrentUser }) => {
         </section>
 
         {/* Features Section */}
-        <section className="bg-white py-20 px-4">
+        <section id="features-section" className="bg-white py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <h2
               className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent text-center mb-6 animate-text-slide-up hover:scale-105 transition-transform duration-300"
