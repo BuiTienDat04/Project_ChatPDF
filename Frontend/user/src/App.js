@@ -1,20 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import ChatPDFPage from "./Pages/ChatPDFPage";
-import UpfilePDF from "./Pages/UpfilePDF";
-import Navigation from "./components/Navigation";
-import TranslatePDF from "./Pages/TranslatePDF";
-import LoginPage from "./Pages/LoginPage";
-import RegisterPage from "./Pages/RegisterPage";
-import Footer from "./components/Footer";
-import PricingPage from "./Pages/PricingPage";
-import ChatBotPage from "./Pages/ChatBotPage";
-import HomePage from "./Pages/HomePage"
-import TestimonialsSection from "./components/TestimonialsSection";
-import OurVisionSection from './components/OurVisionSection';
 import ChatPDFPage from './Pages/ChatPDFPage';
-import UpfilePDF from './Pages/UpfilePDF';
 import Navigation from './components/Navigation';
 import TranslatePDF from './Pages/TranslatePDF';
 import LoginPage from './Pages/LoginPage';
@@ -24,7 +12,7 @@ import PricingPage from './Pages/PricingPage';
 import ChatBotPage from './Pages/ChatBotPage';
 import HomePage from './Pages/HomePage';
 import TestimonialsSection from './components/TestimonialsSection';
-
+import OurVisionSection from './components/OurVisionSection';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -74,22 +62,14 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
         <Route path="/home" element={<HomePage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
-        <Route path="/pdf-chat" element={<UpfilePDF />} /> {/* Sửa route để khớp với HomePage */}
         <Route path="/translatepdf" element={<TranslatePDF />} />
-        <Route path='/ourvisionsection' element={<OurVisionSection />} />
-        {/* Truyền setCurrentUser cho LoginPage để cập nhật state sau khi login truyền thống */}
-
+        <Route path="/ourvisionsection" element={<OurVisionSection />} />
         <Route path="/login" element={<LoginPage setCurrentUser={setCurrentUser} />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/chatbot" element={<ChatBotPage />} />
-        <Route path="/chatpdf" element={<ChatPDFPage />} /> {/* Route cho ChatPDFPage */}
+        <Route path="/chatpdf" element={<ChatPDFPage />} />
         <Route path="/testimonialsSection" element={<TestimonialsSection />} />
-        
-        
-
-
-
         <Route path="*" element={<div className="min-h-screen flex items-center justify-center text-gray-600">404 - Page Not Found</div>} />
       </Routes>
     </BrowserRouter>
