@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Download, ArrowLeft, ArrowRight, List, AlignLeft, BookOpen, FileText, Image } from 'lucide-react';
+import { ChevronDown, ChevronRight, Download, ArrowLeft, ArrowRight, List, BookOpen, FileText } from 'lucide-react';
+import ApiService from '../api/api';
 
 const languages = [
   { code: 'vi', name: 'Vietnamese' },
@@ -21,6 +22,9 @@ export default function TranslatePDF() {
   const [showDocumentStructure, setShowDocumentStructure] = useState(true);
   const [pdfStructure, setPdfStructure] = useState(null);
   const [activeTab, setActiveTab] = useState('pages');
+  const [translatedContent, setTranslatedContent] = useState(null);
+  const [translationError, setTranslationError] = useState(null);
+  const [isScrolling, setIsScrolling] = useState(false); // Trạng thái để tránh vòng lặp cuộn
 
   const contentRef = useRef(null);
   const translationRef = useRef(null);
@@ -49,39 +53,29 @@ export default function TranslatePDF() {
       pageCount: fileData.metadata?.pages || (fileData.pages?.length || Math.max(...(fileData.sections?.map(s => s.page || 1)) || [1])),
       pages: {},
       headings: [],
-      paragraphs: 0,
-      lists: 0,
-      images: fileData.images?.length || 0,
     };
 
     const sections = fileData.sections || [];
     sections.forEach(section => {
       const pageNum = section.page || 1;
-      structure.pages[pageNum] = structure.pages[pageNum] || { headings: 0, paragraphs: 0, lists: 0, images: 0, sections: [] };
+      structure.pages[pageNum] = structure.pages[pageNum] || { headings: 0, sections: [] };
       if (section.type === 'heading') {
         structure.headings.push({ content: section.content, page: pageNum });
         structure.pages[pageNum].headings++;
-      } else if (section.type === 'text') {
-        structure.paragraphs++;
-        structure.pages[pageNum].paragraphs++;
-      } else if (section.type === 'list') {
-        structure.lists++;
-        structure.pages[pageNum].lists++;
       }
       structure.pages[pageNum].sections.push(section);
-    });
-
-    fileData.images?.forEach(img => {
-      const pageNum = img.page || 1;
-      structure.pages[pageNum] = structure.pages[pageNum] || { headings: 0, paragraphs: 0, lists: 0, images: 0, sections: [] };
-      structure.pages[pageNum].images++;
     });
 
     setPdfStructure(structure);
     console.log('PDF Structure after analysis:', JSON.stringify(structure, null, 2));
   };
 
-  const handleLanguageChange = (e) => setLanguage(e.target.value);
+  const handleLanguageChange = (e) => {
+    setLanguage(e.target.value);
+    setTranslated(false);
+    setTranslatedContent(null);
+    setTranslationError(null);
+  };
 
   const formatDate = (isoString) => {
     if (!isoString) return '';
@@ -89,31 +83,101 @@ export default function TranslatePDF() {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
-  const translateContent = () => {
+  const translateContent = async () => {
     setIsTranslating(true);
-    setTimeout(() => {
-      setTranslated(true);
+    setTranslationError(null);
+    try {
+      const langName = languages.find(lang => lang.code === language)?.name || language;
+      if (!file.originalFile || typeof file.originalFile !== 'object' || !(file.originalFile instanceof File)) {
+        throw new Error('No valid original file available for translation');
+      }
+      const result = await ApiService.translatePDF(file.originalFile, language, langName);
+      console.log('Translation response:', JSON.stringify(result, null, 2));
+
+      if (!result.success) {
+        throw new Error(result.error || 'Translation failed');
+      }
+
+      if (result.data && result.data[0] && result.data[0].translatedContent) {
+        setTranslatedContent(result.data[0].translatedContent);
+        setTranslated(true);
+      } else {
+        throw new Error('No translated content returned');
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+      setTranslationError(error.message || 'Failed to translate PDF');
+    } finally {
       setIsTranslating(false);
-    }, 1500);
+    }
   };
 
-  const handleDownload = () => alert('Download feature will be implemented soon.');
+  const handleDownload = () => {
+    alert('Download feature will be implemented soon.');
+  };
+
+  const handleScroll = (sourceRef, targetRef, isSourceContent) => {
+    if (isScrolling) return; // Ngăn vòng lặp cuộn
+    setIsScrolling(true);
+
+    const source = sourceRef.current;
+    const target = targetRef.current;
+
+    if (!source || !target) {
+      setIsScrolling(false);
+      return;
+    }
+
+    const sourceScrollRatio = source.scrollTop / (source.scrollHeight - source.clientHeight);
+    const targetScrollHeight = target.scrollHeight - target.clientHeight;
+    const newScrollTop = sourceScrollRatio * targetScrollHeight;
+
+    target.scrollTop = newScrollTop;
+
+    setTimeout(() => setIsScrolling(false), 100); // Reset trạng thái sau một khoảng thời gian ngắn
+  };
 
   const renderContent = (sections = [], images = [], pageRange, isTranslation = false) => {
     const startPage = (pageRange - 1) * pagesToShow + 1;
     const endPage = Math.min(startPage + pagesToShow - 1, pdfStructure?.pageCount || 1);
 
-    const allSections = sections.length > 0 ? sections : (file.sections || []);
-    const allImages = images.length > 0 ? images : (file.images || []);
+    let contentToRender = sections.length > 0 ? sections : (file.sections || []);
+    let imagesToRender = images.length > 0 ? images : (file.images || []);
 
-    const filteredSections = allSections.filter(s => s.page >= startPage && s.page <= endPage);
-    const filteredImages = allImages.filter(img => img.page >= startPage && img.page <= endPage);
+    if (isTranslation && translatedContent) {
+      contentToRender = translatedContent.paragraphs.map((para, idx) => ({
+        type: 'text',
+        content: para.replace(/\*\*/g, ''),
+        page: Math.floor(idx / (translatedContent.paragraphs.length / (pdfStructure?.pageCount || 1))) + 1,
+      }));
+      imagesToRender = [];
+    }
+
+    if (!isTranslation) {
+      contentToRender = contentToRender.map(section => {
+        if (section.type === 'text') {
+          const paragraphs = section.content
+            .split(/(?:\n\s*\n|\n)/)
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+          return paragraphs.map((content, idx) => ({
+            ...section,
+            content,
+            subIndex: idx,
+          }));
+        }
+        return section;
+      }).flat();
+    }
+
+    const filteredSections = contentToRender.filter(s => s.page >= startPage && s.page <= endPage);
+    const filteredImages = imagesToRender.filter(img => img.page >= startPage && img.page <= endPage);
 
     console.log(`Rendering content for pages ${startPage}-${endPage} (isTranslation: ${isTranslation})`);
     console.log('Filtered sections:', JSON.stringify(filteredSections, null, 2));
     console.log('Filtered images:', JSON.stringify(filteredImages, null, 2));
 
-    if (filteredSections.length === 0 && filteredImages.length === 0) {
+    if (filteredSections.length === 0 && filteredImages.length === 0 && !isTranslation) {
       return (
         <div className="p-4 bg-white rounded-lg border border-gray-200">
           <p className="text-gray-700 mb-4 whitespace-pre-wrap leading-relaxed">No content available for page {startPage}.</p>
@@ -121,71 +185,57 @@ export default function TranslatePDF() {
       );
     }
 
+    if (isTranslation && translationError) {
+      return (
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <p className="text-red-500 mb-4 whitespace-pre-wrap leading-relaxed">Error: {translationError}</p>
+        </div>
+      );
+    }
+
+    if (isTranslation && !translatedContent) {
+      return (
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <p className="text-gray-500 mb-4 whitespace-pre-wrap leading-relaxed">Please click Translate to see the translated content.</p>
+        </div>
+      );
+    }
+
     const sectionElements = filteredSections.map((section, idx) => {
-      const content = isTranslation && translated ? `[Translated to ${language}] ${section.content}` : section.content;
+      const content = section.content || (isTranslation && translatedContent ? translatedContent.text : 'No content');
+      const key = section.subIndex ? `${idx}-${section.subIndex}` : idx;
       if (section.type === 'heading') {
         return (
-          <div key={idx} className="mb-4 pb-2 border-b border-gray-100">
+          <div key={key} className="mb-4 pb-2 border-b border-gray-100">
             <h2 className="text-2xl font-bold text-gray-800">
-              {content || 'No heading content'}
+              {content}
               <span className="ml-2 text-xs text-gray-400">Page {section.page || 1}</span>
             </h2>
           </div>
         );
       } else if (section.type === 'list') {
         return (
-          <div key={idx} className="mb-4 ml-5">
-            <div className="flex items-center text-gray-600 text-sm mb-1">
-              <List className="w-4 h-4 mr-1" />
-              <span>List • Page {section.page || 1}</span>
-            </div>
-            <ul className="list-disc text-gray-700">
+          <div key={key} className="mb-4 ml-5">
+            <ul className="list-disc text-gray-700 whitespace-pre-wrap leading-relaxed">
               {(section.items || []).map((item, i) => (
-                <li key={i} className="mb-2">{isTranslation && translated ? `[Translated to ${language}] ${item}` : item || 'No item'}</li>
+                <li key={i} className="mb-2">{item || 'No item'}</li>
               ))}
             </ul>
           </div>
         );
       } else {
-        // Xử lý text, hiển thị toàn bộ nội dung
-        const lines = content.split('\n').filter(line => line.trim());
+        const lines = Array.isArray(content) ? content : content.split(/(?:\n\s*\n|\n)/).filter(line => line.trim());
         return (
-          <div key={idx} className="mb-4">
-            <div className="flex items-center text-gray-600 text-sm mb-1">
-              <AlignLeft className="w-4 h-4 mr-1" />
-              <span>Paragraph • Page {section.page || 1}</span>
-            </div>
+          <div key={key} className="mb-4">
             {lines.map((line, lineIdx) => (
-              <p key={lineIdx} className="text-gray-700 leading-relaxed whitespace-pre-wrap">{line || 'No content'}</p>
+              <p key={lineIdx} className="text-gray-700 whitespace-pre-wrap leading-relaxed">{line || 'No content'}</p>
             ))}
           </div>
         );
       }
     });
 
-    const imageElements = filteredImages.map((img, idx) => {
-      if (!img?.data) return null;
-      let base64String = img.data;
-      if (typeof img.data !== 'string' || !img.data.startsWith('data:')) {
-        base64String = `data:image/jpeg;base64,${img.data}`;
-      }
-      return (
-        <div key={idx} className="mb-6">
-          <div className="flex items-center text-gray-600 text-sm mb-1">
-            <Image className="w-4 h-4 mr-1" />
-            <span>Image • Page {img.page || 1}</span>
-          </div>
-          <img
-            src={base64String}
-            alt={`Image from page ${img.page || 1}`}
-            className="max-w-full h-auto rounded-lg shadow-md border border-gray-200"
-            loading="lazy"
-          />
-        </div>
-      );
-    }).filter(img => img);
-
-    return [...sectionElements, ...imageElements];
+    return [...sectionElements];
   };
 
   const renderDocumentStructure = () => {
@@ -208,13 +258,7 @@ export default function TranslatePDF() {
               <h3 className="font-semibold text-gray-800 mb-4">Document Overview</h3>
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-blue-50 p-3 rounded-md"><div className="text-xs text-gray-500">Total Pages</div><div className="font-semibold text-xl">{pdfStructure.pageCount}</div></div>
-                <div className="bg-green-50 p-3 rounded-md"><div className="text-xs text-gray-500">Total Paragraphs</div><div className="font-semibold text-xl">{pdfStructure.paragraphs}</div></div>
-                <div className="bg-yellow-50 p-3 rounded-md"><div className="text-xs text-gray-500">Total Headings</div><div className="font-semibold text-xl">{pdfStructure.headings.length}</div></div>
-                <div className="bg-purple-50 p-3 rounded-md"><div className="text-xs text-gray-500">Total Images</div><div className="font-semibold text-xl">{pdfStructure.images}</div></div>
               </div>
-              {/* Xóa phần Page Structure bằng cách comment hoặc xóa renderPageStructure */}
-              {/* <h3 className="font-semibold text-gray-800 mb-2">Page Structure</h3>
-              <div className="space-y-2">{Object.keys(pdfStructure.pages).map(pageNum => renderPageStructure(parseInt(pageNum)))}</div> */}
             </div>
           )}
           {activeTab === 'headings' && (
@@ -293,7 +337,7 @@ export default function TranslatePDF() {
           <select className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" value={language} onChange={handleLanguageChange} disabled={isTranslating}>
             {languages.map((lang) => <option key={lang.code} value={lang.code}>{lang.name}</option>)}
           </select>
-          <button onClick={translateContent} disabled={isTranslating || translated} className={`text-sm px-4 py-2 rounded-lg shadow-sm flex items-center space-x-2 ${isTranslating ? 'bg-gray-400 text-gray-100 cursor-not-allowed' : translated ? 'bg-green-600 text-white' : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800'} transition-all duration-200`}>
+          <button onClick={translateContent} disabled={isTranslating} className={`text-sm px-4 py-2 rounded-lg shadow-sm flex items-center space-x-2 ${isTranslating ? 'bg-gray-400 text-gray-100 cursor-not-allowed' : translated ? 'bg-green-600 text-white' : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800'} transition-all duration-200`}>
             {isTranslating ? (<><svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Translating...</span></>) : translated ? <span>Translated</span> : <span>Translate</span>}
           </button>
         </div>
@@ -302,13 +346,23 @@ export default function TranslatePDF() {
       <div className="w-full flex">
         {showDocumentStructure && <div className="w-64 border-r border-gray-200 bg-white">{renderDocumentStructure()}</div>}
         <div className={`flex-1 flex flex-col md:flex-row bg-white rounded-b-2xl border border-gray-200 shadow-md ${showDocumentStructure ? '' : 'w-full'}`}>
-          <div ref={contentRef} className="w-full md:w-1/2 p-6 border-r border-gray-200 overflow-auto" style={{ height: 'calc(100vh - 300px)' }}>
+          <div
+            ref={contentRef}
+            className="w-full md:w-1/2 p-6 border-r border-gray-200 overflow-auto"
+            style={{ height: 'calc(100vh - 300px)' }}
+            onScroll={() => handleScroll(contentRef, translationRef, true)}
+          >
             <h3 className="text-lg font-semibold text-gray-800 mb-6">PDF Content</h3>
             {renderContent(file.sections || [], file.images || [], currentPage).length > 0
               ? renderContent(file.sections || [], file.images || [], currentPage)
               : <p className="text-gray-500 italic">No content available for page {currentPage}.</p>}
           </div>
-          <div ref={translationRef} className="w-full md:w-1/2 p-6 bg-gray-50 overflow-auto" style={{ height: 'calc(100vh - 300px)' }}>
+          <div
+            ref={translationRef}
+            className="w-full md:w-1/2 p-6 bg-gray-50 overflow-auto"
+            style={{ height: 'calc(100vh - 300px)' }}
+            onScroll={() => handleScroll(translationRef, contentRef, false)}
+          >
             <h3 className="text-lg font-semibold text-gray-800 mb-6">Translation</h3>
             {isTranslating ? (
               <div className="flex flex-col items-center justify-center h-32">
@@ -319,7 +373,7 @@ export default function TranslatePDF() {
                 <p className="text-gray-600">Translating content, please wait...</p>
               </div>
             ) : (
-              renderContent(file.sections || [], file.images || [], currentPage, true)
+              renderContent([], [], currentPage, true)
             )}
           </div>
         </div>

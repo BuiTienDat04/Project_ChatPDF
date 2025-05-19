@@ -25,6 +25,7 @@
   "dependencies": {
     "@google-cloud/vision": "^5.1.0",
     "@google/genai": "^0.13.0",
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
@@ -46,6 +47,7 @@
     "pdf2pic": "^3.1.4",
     "pdfjs-dist": "^2.16.105",
     "sharp": "^0.33.5",
+    "socket.io": "^4.8.1",
     "tesseract.js": "^6.0.1",
     "url": "^0.11.4",
     "whatwg-url": "^14.2.0"

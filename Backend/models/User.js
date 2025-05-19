@@ -4,11 +4,11 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   fullName: { type: String, required: true },
-  picture: { type: String }, // URL hình ảnh từ Google
+  picture: { type: String }, 
   birthday: { type: String }, 
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   statusOnline: { type: Boolean, default: false },
-  credits: { type: Number, default: 30 }, // Tín dụng miễn phí mỗi ngày
+  credits: { type: Number, default: 30 }, 
   createdAt: { type: Date, default: Date.now },
 });
 

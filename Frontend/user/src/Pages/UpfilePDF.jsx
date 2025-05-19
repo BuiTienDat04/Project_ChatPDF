@@ -1,27 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, FileCheck2, Loader2, FileText, MoreVertical, Edit, Trash2, X } from 'lucide-react';
+import { Upload, FileCheck2, Loader2, FileText, Edit, Trash2, X } from 'lucide-react';
 import ApiService from '../api/api';
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
 
 const UpfilePDF = ({ onFileHistoryChange }) => {
-  // State management
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileHistory, setFileHistory] = useState([]);
-  const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameFileId, setRenameFileId] = useState(null);
   const [newFileName, setNewFileName] = useState('');
 
-  // Refs
   const historyRef = useRef(null);
-  const menuRefs = useRef([]);
   const navigate = useNavigate();
 
-  // Load file history from localStorage
   useEffect(() => {
     const loadHistory = () => {
       try {
@@ -30,26 +24,42 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
           const parsedHistory = JSON.parse(savedHistory);
           if (Array.isArray(parsedHistory)) {
             setFileHistory(parsedHistory);
+          } else {
+            console.warn('File history in localStorage is not an array. Resetting to empty array.');
+            setFileHistory([]);
+            localStorage.setItem('fileHistory', JSON.stringify([]));
           }
+        } else {
+          setFileHistory([]);
+          localStorage.setItem('fileHistory', JSON.stringify([]));
         }
       } catch (error) {
-        console.error('Error loading history:', error);
+        console.error('Error loading file history from localStorage:', error);
+        setFileHistory([]);
+        localStorage.setItem('fileHistory', JSON.stringify([]));
       }
     };
     loadHistory();
   }, []);
 
-  // Save file history to localStorage
   useEffect(() => {
-    if (fileHistory.length > 0) {
+    try {
       localStorage.setItem('fileHistory', JSON.stringify(fileHistory));
       onFileHistoryChange?.(fileHistory);
+    } catch (error) {
+      console.error('Error saving file history to localStorage:', error);
     }
   }, [fileHistory, onFileHistoryChange]);
 
-  // Handle file processing with backend API
   const handleFileProcessing = async (file) => {
-    if (!file || !isValidFileType(file)) return;
+    if (!file) {
+      alert('Vui lòng chọn một tệp PDF!');
+      return;
+    }
+    if (file.type !== 'application/pdf') {
+      alert('Chỉ hỗ trợ tệp PDF!');
+      return;
+    }
     if (isUploading) return;
 
     setSelectedFile(file);
@@ -57,25 +67,37 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     setUploadProgress(0);
 
     try {
-      // Simulate progress (replace with actual progress events if needed)
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 300);
 
-      // Send to backend API
-      const result = await ApiService.analyzePDF(file, progressEvent => {
-        const progress = Math.round((progressEvent.loaded / progressEvent.total) * 90);
-        setUploadProgress(progress);
-      });
+      const result = await ApiService.analyzePDF(file);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      // Create new file entry
-      const newFileEntry = createFileEntry(file, result);
-      updateFileHistory(newFileEntry);
+      if (!result?.success) throw new Error('Invalid response from server');
 
-      // Navigate to translation page
+      const { content = {}, images = [], metadata = {} } = result.data || {};
+
+      const newFileEntry = {
+        id: Date.now() + Math.random().toString(36).substring(2, 9),
+        name: file.name,
+        uploadDate: new Date().toISOString(),
+        content: content,
+        sections: content.sections || [],
+        pages: content.pages || [],
+        images: images.map(img => ({
+          ...img,
+          data: img.data || img.base64 || '',
+          page: img.page || 1,
+        })),
+        metadata: { ...metadata, fileInfo: { size: file.size, type: file.type, lastModified: file.lastModified } },
+        originalFile: file, // Thêm File object gốc
+      };
+
+      console.log('New file entry:', newFileEntry);
+      updateFileHistory(newFileEntry);
       navigate('/translatepdf', { state: { file: newFileEntry } });
     } catch (error) {
       console.error('Processing error:', error);
@@ -87,49 +109,28 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
     }
   };
 
-  // Helper functions
-  const isValidFileType = (file) => {
-    return file?.type === 'application/pdf';
-  };
-
-  const createFileEntry = (file, apiResult) => ({
-    id: Date.now() + Math.random().toString(36).substring(2, 9),
-    name: file.name,
-    uploadDate: new Date().toISOString(),
-    content: apiResult.originalText,
-    pages: [{ pageNumber: 1, content: apiResult.originalText }],
-    metadata: {
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified
-    }
-  });
-
   const updateFileHistory = (newEntry) => {
-    setFileHistory(prev => [newEntry, ...prev]);
+    setFileHistory(prev => {
+      const updatedHistory = [newEntry, ...prev].slice(0, 50);
+      console.log('Updated file history:', updatedHistory);
+      return updatedHistory;
+    });
   };
 
-  // Event handlers
   const handleFileChange = async (e) => {
     await handleFileProcessing(e.target.files?.[0]);
     e.target.value = '';
   };
 
-  const handleDrop = async (e) => {
-    e.preventDefault();
-    setDragActive(false);
-    await handleFileProcessing(e.dataTransfer.files?.[0]);
-  };
-
-  const handleDrag = (e) => {
-    e.preventDefault();
-    setDragActive(e.type === 'dragenter' || e.type === 'dragover');
-  };
-
   const formatDate = (isoString) => {
-    if (!isoString) return '';
-    const date = new Date(isoString);
-    return date.toLocaleString();
+    if (!isoString) return 'N/A';
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'N/A';
+    }
   };
 
   const handleRenameConfirm = () => {
@@ -140,23 +141,17 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
       )
     );
     setShowRenameModal(false);
+    setNewFileName('');
+    setRenameFileId(null);
   };
 
   const handleDelete = (id) => {
     setFileHistory(prev => prev.filter(file => file.id !== id));
   };
 
-  // Render
   return (
     <section className="flex flex-col items-center py-12 px-6 min-h-screen bg-gradient-to-b from-purple-100 to-white font-sans">
-      {/* Upload Area */}
-      <div
-        className={`border-2 border-purple-200 rounded-3xl w-full max-w-[90%] min-h-[420px] p-12 flex flex-col items-center justify-center text-center bg-gradient-to-br from-purple-50/90 to-pink-50/90 backdrop-blur-md shadow-xl ${dragActive ? 'border-purple-300 bg-purple-100/90' :
-          isUploading ? 'border-pink-300 bg-pink-100/90' :
-            selectedFile ? 'border-pink-300 bg-pink-100/90' :
-              'hover:border-purple-300'
-          }`}
-      >
+      <div className={`border-2 border-purple-200 rounded-3xl w-full max-w-[90%] min-h-[420px] p-12 flex flex-col items-center justify-center text-center bg-gradient-to-br from-purple-50/90 to-pink-50/90 backdrop-blur-md shadow-xl ${isUploading ? 'border-pink-300 bg-pink-100/90' : selectedFile ? 'border-pink-300 bg-pink-100/90' : 'hover:border-purple-300'}`}>
         <input
           type="file"
           id="file-upload"
@@ -165,7 +160,6 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
           onChange={handleFileChange}
           disabled={isUploading}
         />
-
         <div className="mb-10">
           {isUploading ? (
             <Loader2 className="animate-spin text-purple-600" size={60} />
@@ -175,12 +169,9 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
             <Upload className="text-purple-500" size={60} />
           )}
         </div>
-
         {isUploading ? (
           <div className="w-full max-w-lg space-y-5">
-            <p className="font-semibold text-purple-800 text-2xl tracking-tight">
-              Đang tải lên {selectedFile?.name}
-            </p>
+            <p className="font-semibold text-purple-800 text-2xl tracking-tight">Đang tải lên {selectedFile?.name}</p>
             <div className="w-full bg-purple-100 rounded-full h-5 overflow-hidden shadow-inner">
               <div
                 className="bg-gradient-to-r from-purple-500 to-pink-500 h-5 rounded-full"
@@ -189,20 +180,13 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
             </div>
           </div>
         ) : selectedFile ? (
-          <p className="font-semibold text-pink-600 text-2xl tracking-tight">
-            Tài liệu đã sẵn sàng để xử lý!
-          </p>
+          <p className="font-semibold text-pink-600 text-2xl tracking-tight">Tài liệu đã sẵn sàng để xử lý!</p>
         ) : (
           <>
-            <p className="font-bold text-purple-900 text-3xl tracking-tight">
-              Kéo & thả PDF của bạn tại đây
-            </p>
-            <p className="text-lg text-gray-600 mt-4 max-w-xl leading-relaxed">
-              Hoặc nhấn để chọn tệp PDF (tối đa 50MB) và khám phá ngay!
-            </p>
+            <p className="font-bold text-purple-900 text-3xl tracking-tight">Kéo & thả PDF của bạn tại đây</p>
+            <p className="text-lg text-gray-600 mt-4 max-w-xl leading-relaxed">Hoặc nhấn để chọn tệp PDF (tối đa 50MB) và khám phá ngay!</p>
           </>
         )}
-
         <label
           htmlFor="file-upload"
           className={`mt-12 px-12 py-5 rounded-full shadow-xl flex items-center gap-5 cursor-pointer font-semibold text-xl bg-gradient-to-r ${isUploading
@@ -218,21 +202,11 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
           {isUploading ? 'Đang xử lý...' : 'Chọn tệp PDF'}
         </label>
       </div>
-
-      {/* File History */}
-      <div
-        ref={historyRef}
-        className="w-full max-w-6xl mt-16 mx-auto"
-      >
+      <div ref={historyRef} className="w-full max-w-6xl mt-16 mx-auto">
         <div className="bg-gradient-to-br from-white to-purple-50/20 backdrop-blur-md rounded-3xl shadow-lg p-10 border border-purple-100/20">
-          <h2 className="text-5xl font-semibold text-purple-900 mb-10 text-center tracking-wide">
-            Tài liệu đã tải lên
-          </h2>
-
+          <h2 className="text-5xl font-semibold text-purple-900 mb-10 text-center tracking-wide">Tài liệu đã tải lên</h2>
           {fileHistory.length === 0 ? (
-            <p className="text-gray-500 text-center text-xl font-light py-12 tracking-wide">
-              📁 Chưa có tài liệu nào được tìm thấy
-            </p>
+            <p className="text-gray-500 text-center text-xl font-light py-12 tracking-wide">📁 Chưa có tài liệu nào được tìm thấy</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {fileHistory.map((file, index) => (
@@ -242,11 +216,12 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
                   onClick={() => navigate('/translatepdf', { state: { file } })}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.08, duration: 0.5, ease: "easeOut" }}
+                  transition={{ delay: index * 0.08, duration: 0.5, ease: 'easeOut' }}
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <FileText className="text-purple-600 flex-shrink-0" size={28} />
+
                       <div className="min-w-0 flex-1">
                         <span
                           className="font-medium text-purple-900 block text-lg truncate"
@@ -257,6 +232,9 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
                         <span className="text-xs text-gray-400 block mt-1">
                           {formatDate(file.uploadDate)}
                         </span>
+                      <div className="min-w-0">
+                        <span className="font-medium text-purple-900 truncate block text-lg">{file.name || 'Không có tên'}</span>
+                        <span className="text-xs text-gray-400 block mt-1">{formatDate(file.uploadDate)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -265,7 +243,7 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
                         onClick={(e) => {
                           e.stopPropagation();
                           setRenameFileId(file.id);
-                          setNewFileName(file.name);
+                          setNewFileName(file.name || '');
                           setShowRenameModal(true);
                         }}
                       >
@@ -287,36 +265,30 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
             </div>
           )}
         </div>
-
         <style jsx>{`
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #fafaff;
-      border-radius: 4px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #c4b5fd;
-      border-radius: 4px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #a78bfa;
-    }
-  `}</style>
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: #fafaff;
+            border-radius: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c4b5fd;
+            border-radius: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a78bfa;
+          }
+        `}</style>
       </div>
-
-      {/* Rename Modal */}
       {showRenameModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <motion.div
             className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 w-full max-w-md shadow-xl border border-purple-100/20"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
           >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-medium text-purple-900 tracking-wide">Đổi tên tài liệu</h3>
