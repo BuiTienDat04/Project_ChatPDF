@@ -49,30 +49,33 @@ const Navigation = ({ user, onLogout }) => {
   }, [user]);
 
   const handleLogout = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (response.ok) {
-        navigate('/', { replace: true });
-      } else {
-        console.error('Backend logout failed:', data.message || 'Unknown error');
-        alert('Đăng xuất thất bại từ server: ' + (data.message || 'Lỗi không xác định.'));
-      }
-    } catch (error) {
-      console.error('Lỗi đăng xuất:', error);
-      alert('Đăng xuất thất bại do lỗi mạng.');
-    } finally {
-      if (onLogout) {
-        onLogout();
-      }
-      setCurrentUser(null);
-      setIsLoggedIn(false);
-      setShowDropdown(false);
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      navigate('/', { replace: true });
+    } else {
+      console.error('Backend logout failed:', data.message || 'Unknown error');
+      alert('Đăng xuất thất bại từ server: ' + (data.message || 'Lỗi không xác định.'));
     }
-  };
+  } catch (error) {
+    console.error('Lỗi đăng xuất:', error);
+    alert('Đăng xuất thất bại do lỗi mạng.');
+  } finally {
+    if (onLogout) {
+      onLogout();
+    }
+    setCurrentUser(null);
+    setIsLoggedIn(false);
+    setShowDropdown(false);
+    window.location.reload();
+  }
+};
+
 
   const handleMouseEnter = () => {
     if (dropdownTimeoutRef.current) {
@@ -156,7 +159,7 @@ const Navigation = ({ user, onLogout }) => {
             >
               <div className="relative">
                 <img
-                  src={currentUser?.avatar || 'https://via.placeholder.com/40'}
+                  src={currentUser?.picture || 'https://via.placeholder.com/40'}
                   alt="User Avatar"
                   className="w-11 h-11 rounded-full cursor-pointer border-2 border-pink-200/70 hover:border-purple-400/70 transition-all duration-400 ease-out hover:scale-110"
                   onClick={() => setShowDropdown(prev => !prev)}
@@ -167,14 +170,11 @@ const Navigation = ({ user, onLogout }) => {
                 </div>
               </div>
               <span className="text-gray-800/90 font-medium text-sm hidden md:inline">
-                {currentUser?.name || 'Người dùng'}
+                {currentUser?.fullName || 'Người dùng'}
               </span>
 
               {showDropdown && (
                 <div className="absolute right-0 top-full mt-3 w-48 bg-white/95 backdrop-blur-sm border border-pink-100/50 shadow-xl rounded-lg z-20">
-                  <div className="px-4 py-3 text-sm font-medium text-purple-600/90 border-b border-pink-100/50">
-                    {currentUser?.name || 'Người dùng'}
-                  </div>
                   <button
                     className="w-full text-left px-4 py-3 text-sm text-gray-800/90 hover:bg-purple-50/70 hover:text-purple-600 transition-all duration-300 ease-out"
                     onClick={() => navigate('/profile')}
