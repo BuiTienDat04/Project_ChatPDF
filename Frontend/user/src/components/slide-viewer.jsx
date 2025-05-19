@@ -23,7 +23,7 @@ export default function SlideViewer({ pages, currentPage, pdfFile }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-gray-100 p-4 rounded mb-2 flex-grow flex flex-col">
+      <div className="bg-purple-100 p-4 rounded mb-2 flex-grow flex flex-col">
         <div
           ref={containerRef}
           className="bg-white rounded shadow-sm flex-grow flex flex-col items-center overflow-auto relative"

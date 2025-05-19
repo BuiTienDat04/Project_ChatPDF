@@ -6,7 +6,7 @@ export default function SlidePreview({ pages, currentPage, setCurrentPage }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 bg-purple-100 rounded p-2">
       {pages.map((page, index) => (
         <div
           key={index}
@@ -24,7 +24,7 @@ export default function SlidePreview({ pages, currentPage, setCurrentPage }) {
               />
             </div>
           ) : (
-            <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center mb-1">
+            <div className="aspect-[4/3] bg-purple-100 flex items-center justify-center mb-1">
               <span className="text-gray-400 text-xs">Slide {page.pageNumber}</span>
             </div>
           )}
