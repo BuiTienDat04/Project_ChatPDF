@@ -218,15 +218,26 @@ const UpfilePDF = ({ onFileHistoryChange }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.08, duration: 0.5, ease: 'easeOut' }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
                       <FileText className="text-purple-600 flex-shrink-0" size={28} />
+
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className="font-medium text-purple-900 block text-lg truncate"
+                          title={file.name} // Tooltip for full file name
+                        >
+                          {file.name}
+                        </span>
+                        <span className="text-xs text-gray-400 block mt-1">
+                          {formatDate(file.uploadDate)}
+                        </span>
                       <div className="min-w-0">
                         <span className="font-medium text-purple-900 truncate block text-lg">{file.name || 'Không có tên'}</span>
                         <span className="text-xs text-gray-400 block mt-1">{formatDate(file.uploadDate)}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         className="p-1.5 hover:bg-purple-50/50 rounded-full transition-colors duration-300 ease-out"
                         onClick={(e) => {
