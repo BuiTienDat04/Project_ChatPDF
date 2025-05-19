@@ -206,10 +206,10 @@ export default function Home() {
           {/* Left Sidebar - Preview all slides */}
           <div
             className={`border-r bg-white shadow-sm transition-all duration-300 flex flex-col ${leftSidebarState === "hidden"
-                ? "w-0 overflow-hidden"
-                : leftSidebarState === "collapsed"
-                  ? "w-14"
-                  : "w-64"
+              ? "w-0 overflow-hidden"
+              : leftSidebarState === "collapsed"
+                ? "w-14"
+                : "w-64"
               }`}
           >
             <div className="p-3 border-b flex items-center justify-between bg-pink-50">
@@ -255,8 +255,8 @@ export default function Home() {
                         setCurrentPage(index);
                       }}
                       className={`w-10 h-10 rounded-md flex items-center justify-center text-xs font-medium transition ${currentPage === index
-                          ? "bg-pink-100 text-pink-700 border border-pink-300"
-                          : "bg-gray-100 text-pink-600 hover:bg-pink-50"
+                        ? "bg-pink-100 text-pink-700 border border-pink-300"
+                        : "bg-gray-100 text-pink-600 hover:bg-pink-50"
                         }`}
                     >
                       {page.pageNumber}
@@ -355,20 +355,25 @@ export default function Home() {
           />
         </div>
       ) : (
-        <div className="flex items-center justify-center flex-grow p-8">
-          <div className="text-center p-8 border rounded-lg bg-white shadow-md max-w-md">
-            <h2 className="text-2xl font-bold text-pink-600 mb-2">
+        <div className="flex items-center justify-center flex-grow p-12 bg-gradient-to-br from-pink-100 to-purple-100 min-h-screen">
+          <div className="text-center p-12 border-2 border-pink-300 rounded-2xl bg-white shadow-2xl max-w-lg w-full transform transition-all duration-300 hover:scale-105 hover:shadow-3xl">
+            <h2 className="text-4xl font-extrabold text-pink-700 mb-4 animate-pulse">
               Welcome to PDF Translator
             </h2>
-            <p className="text-pink-600 mb-4">Upload a PDF file to get started</p>
+            <p className="text-lg text-pink-600 mb-6 font-medium">
+              Upload a PDF file to get started
+            </p>
             <div className="flex justify-center">
-              <FileUploader
-                setPdfFile={setPdfFile}
-                setPdfPages={setPdfPages}
-                setTranslatedPages={setTranslatedPages}
-                setIsLoading={setIsLoading}
-                pdfLoaded={pdfLoaded}
-              />
+              <div className="w-full">
+                <FileUploader
+                  setPdfFile={setPdfFile}
+                  setPdfPages={setPdfPages}
+                  setTranslatedPages={setTranslatedPages}
+                  setIsLoading={setIsLoading}
+                  pdfLoaded={pdfLoaded}
+                  className="w-full p-6 bg-pink-50 border-2 border-dashed border-pink-400 rounded-xl hover:bg-pink-100 transition-colors duration-200"
+                />
+              </div>
             </div>
           </div>
         </div>
