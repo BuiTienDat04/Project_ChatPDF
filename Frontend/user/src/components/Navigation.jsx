@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Brain } from 'lucide-react';
@@ -49,33 +48,32 @@ const Navigation = ({ user, onLogout }) => {
   }, [user]);
 
   const handleLogout = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
 
-    const data = await response.json();
-    if (response.ok) {
-      navigate('/', { replace: true });
-    } else {
-      console.error('Backend logout failed:', data.message || 'Unknown error');
-      alert('Đăng xuất thất bại từ server: ' + (data.message || 'Lỗi không xác định.'));
+      const data = await response.json();
+      if (response.ok) {
+        navigate('/', { replace: true });
+      } else {
+        console.error('Backend logout failed:', data.message || 'Unknown error');
+        alert('Đăng xuất thất bại từ server: ' + (data.message || 'Lỗi không xác định.'));
+      }
+    } catch (error) {
+      console.error('Lỗi đăng xuất:', error);
+      alert('Đăng xuất thất bại do lỗi mạng.');
+    } finally {
+      if (onLogout) {
+        onLogout();
+      }
+      setCurrentUser(null);
+      setIsLoggedIn(false);
+      setShowDropdown(false);
+      window.location.reload();
     }
-  } catch (error) {
-    console.error('Lỗi đăng xuất:', error);
-    alert('Đăng xuất thất bại do lỗi mạng.');
-  } finally {
-    if (onLogout) {
-      onLogout();
-    }
-    setCurrentUser(null);
-    setIsLoggedIn(false);
-    setShowDropdown(false);
-    window.location.reload();
-  }
-};
-
+  };
 
   const handleMouseEnter = () => {
     if (dropdownTimeoutRef.current) {
@@ -100,7 +98,7 @@ const Navigation = ({ user, onLogout }) => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full z-20 flex items-center justify-between px-6 md:px-10 py-4 bg-white/90 backdrop-blur-md shadow-md border-b border-pink-100/50">
+      <header className="fixed top-0 left-0 w-full z-20 flex items-center justify-between px-6 md:px-10 py-4 bg-purple-100/90 backdrop-blur-md shadow-md border-b border-purple-100/50">
         <div className="flex items-center space-x-10">
           <Link to="/" className="flex items-center space-x-3 group transition-all duration-400 ease-out hover:scale-105">
             <div className="relative overflow-hidden p-2 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 shadow-lg">
