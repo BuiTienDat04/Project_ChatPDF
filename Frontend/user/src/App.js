@@ -13,6 +13,7 @@ import PricingPage from "./Pages/PricingPage";
 import ChatBotPage from "./Pages/ChatBotPage";
 import HomePage from "./Pages/HomePage"
 import TestimonialsSection from "./components/TestimonialsSection";
+import OurVisionSection from './components/OurVisionSection';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -71,6 +72,7 @@ export default function App() {
         <Route path="/chatpdf" element={<ChatPDFPage />} />
         <Route path="upfilepdf" element={<UpfilePDF />} />
         <Route path="/translatepdf" element={<TranslatePDF />} />
+        <Route path='/ourvisionsection' element={<OurVisionSection />} />
         {/* Truyền setCurrentUser cho LoginPage để cập nhật state sau khi login truyền thống */}
         <Route path="/login" element={<LoginPage setCurrentUser={setCurrentUser} />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -78,11 +80,11 @@ export default function App() {
         <Route path="/chatbot" element={<ChatBotPage />} />
 
         <Route path="/testimonialsSection" element={<TestimonialsSection />} />
+        
+        
 
 
       </Routes>
-
-      <Footer />
     </BrowserRouter>
   );
 }
