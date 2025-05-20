@@ -6,13 +6,13 @@ import { MessageCircle, FileText, Globe, Star, Zap, BookOpen, Rocket, Sparkles, 
 
 const HomePage = () => {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-white font-inter overflow-x-hidden relative">
+        <div className="min-h-screen bg-white font-inter overflow-x-hidden relative">
             {/* Subtle Starry Background with Purple-Pink Stars */}
-            <div className="fixed inset-0 bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Cdefs%3E%3Cpattern id=%22stars%22 width=%2250%22 height=%2250%22 patternUnits=%22userSpaceOnUse%22%3E%3Ccircle cx=%2210%22 cy=%2210%22 r=%221.5%22 fill=%22%23C084FC%22 filter=%22url(%23glow)%22/%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%222%22 fill=%22%23FBCFE8%22 filter=%22url(%23glow)%22/%3E%3Ccircle cx=%2240%22 cy=%2215%22 r=%221%22 fill=%22%23EC4899%22 filter=%22url(%23glow)%22/%3E%3C/pattern%3E%3Cfilter id=%22glow%22%3E%3CfeGaussianBlur stdDeviation=%222%22/%3E%3CfeComponentTransfer%3E%3CfeFuncA type=%22linear%22 slope=%221.3%22/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3C/defs%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22url(%23stars)%22/%3E%3C/svg%3E')] opacity-20 pointer-events-none animate-twinkle"></div>
+            <div className="fixed inset-0 "></div>
             <Navigation />
             <main className="w-full relative z-10">
                 {/* Hero Section */}
-                <section className="relative flex flex-col items-start px-6 overflow-hidden bg-gradient-to-tr from-purple-100 via-pink-100 to-white">
+                <section className="relative flex flex-col items-start px-6 overflow-hidden bg-white">
                     {/* Cosmic Blob with Purple-Pink Gradient */}
                     <div className="absolute inset-0 opacity-30 pointer-events-none animate-blob-pulse">
                         <svg
@@ -103,29 +103,29 @@ const HomePage = () => {
                 .animate-pulse-shadow { animation: pulse-shadow 2s infinite ease-in-out; }
               `}
                         </style>
-                        <span className="inline-block px-8 py-4 mb-6 text-lg font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg font-inter mt-10">
+                        <span className="inline-block px-8 py-4 mb-6 text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg font-inter mt-10 animate-pulse-shadow">
                             AI Đổi Mới Ngôn Ngữ
                         </span>
 
-                        <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 mb-10 tracking-tight max-w-4xl font-inter">
+                        <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-10 tracking-tight max-w-4xl font-inter">
                             Sider AI - Kết Nối Tri Thức Toàn Cầu
                         </h1>
 
                         <p className="text-2xl md:text-3xl text-gray-700 max-w-5xl mb-12 leading-relaxed font-inter">
                             <span className="block mb-4">Tăng tốc giao tiếp và khám phá tài liệu với</span>
-                            <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg">AI đa ngôn ngữ thông minh</span>
+                            <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg shadow-md animate-pulse-shadow">AI đa ngôn ngữ thông minh</span>
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-8 mb-16">
                             <Link
                                 to="/chatbot"
-                                className="px-16 py-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:brightness-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-300/50 font-inter"
+                                className="px-16 py-8 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xl rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:brightness-110 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-300/50 font-inter animate-pulse-shadow"
                             >
                                 Trò Chuyện Với AI
                             </Link>
                             <Link
                                 to="/chatpdf"
-                                className="px-16 py-8 bg-white border-2 border-purple-400 text-purple-400 font-bold text-xl rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:bg-purple-50 hover:border-purple-500 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-300/50 font-inter"
+                                className="px-16 py-8 bg-white border-2 border-purple-400 text-purple-600 font-bold text-xl rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:bg-purple-50 hover:border-purple-500 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-300/50 font-inter animate-pulse-shadow"
                             >
                                 Dịch PDF Đa Ngôn Ngữ
                             </Link>
@@ -133,15 +133,15 @@ const HomePage = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 max-w-5xl">
                             <div className="flex flex-col items-center">
-                                <span className="text-5xl font-bold text-purple-500 font-inter">98%+</span>
+                                <span className="text-5xl font-bold text-purple-600 font-inter animate-pulse-shadow">98%+</span>
                                 <p className="text-xl text-gray-700 text-center font-inter">Độ chính xác dịch thuật</p>
                             </div>
                             <div className="flex flex-col items-center">
-                                <span className="text-5xl font-bold text-pink-500 font-inter">100+</span>
+                                <span className="text-5xl font-bold text-pink-600 font-inter animate-pulse-shadow">100+</span>
                                 <p className="text-xl text-gray-700 text-center font-inter">Ngôn ngữ hỗ trợ</p>
                             </div>
                             <div className="flex flex-col items-center">
-                                <span className="text-5xl font-bold text-purple-400 font-inter">2s</span>
+                                <span className="text-5xl font-bold text-purple-400 font-inter animate-pulse-shadow">2s</span>
                                 <p className="text-xl text-gray-700 text-center font-inter">Tốc độ xử lý tức thời</p>
                             </div>
                         </div>
@@ -166,7 +166,7 @@ const HomePage = () => {
                 <section className="py-32 px-6 sm:px-12 relative z-10">
                     <div className="max-w-7xl mx-auto">
                         <h2
-                            className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-500 tracking-tight max-w-4xl pl-4 font-inter animate-fade-in-left"
+                            className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600 tracking-tight max-w-4xl pl-4 font-inter animate-fade-in-left"
                             style={{ animationDelay: '0.3s', animationFillMode: 'forwards', lineHeight: '1.3' }}
                         >
                             Sider: Đột Phá Công Nghệ AI
@@ -179,7 +179,7 @@ const HomePage = () => {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                             <div className="p-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.7s' }}>
-                                <Target size={64} className="text-purple-500 mb-6 mx-auto animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
+                                <Target size={64} className="text-purple-600 mb-6 mx-auto animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
                                 <h3 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up font-inter" style={{ animationDelay: '0.9s', animationFillMode: 'forwards' }}>
                                     Chính Xác Tuyệt Đối
                                 </h3>
@@ -188,7 +188,7 @@ const HomePage = () => {
                                 </p>
                             </div>
                             <div className="p-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.8s' }}>
-                                <Zap size={64} className="text-pink-500 mb-6 mx-auto animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
+                                <Zap size={64} className="text-pink-600 mb-6 mx-auto animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
                                 <h3 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up font-inter" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
                                     Tốc Độ Vượt Trội
                                 </h3>
@@ -229,7 +229,7 @@ const HomePage = () => {
                 <section className="py-32 px-6 sm:px-12 relative z-10">
                     <div className="max-w-7xl mx-auto">
                         <div className="mb-20 space-y-4 pl-4">
-                            <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 tracking-tight font-inter animate-slide-in-left">
+                            <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 tracking-tight font-inter animate-slide-in-left">
                                 Chinh Phục PDF Với AI
                             </h2>
                             <p className="text-2xl text-gray-700 max-w-3xl leading-relaxed font-inter animate-slide-in-left delay-100">
@@ -241,12 +241,12 @@ const HomePage = () => {
                             {/* Card 1 - Instant PDF Translation */}
                             <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-purple-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[400px] flex flex-col">
                                 <div className="p-8 flex-1">
-                                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-[360deg] transition-all duration-500">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-[360deg] transition-all duration-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
                                         Dịch Thuật Tức Thời
                                     </h3>
                                     <p className="text-gray-600 leading-relaxed mb-4">
@@ -275,12 +275,12 @@ const HomePage = () => {
                             {/* Card 2 - Smart PDF Analysis */}
                             <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-pink-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[400px] flex flex-col">
                                 <div className="p-8 flex-1">
-                                    <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl flex items-center justify-center mb-6 transform group-hover:scale-125 transition-all duration-500">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:scale-125 transition-all duration-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-pink-700 to-purple-600 bg-clip-text text-transparent">
                                         Phân Tích Thông Minh
                                     </h3>
                                     <p className="text-gray-600 leading-relaxed mb-4">
@@ -304,12 +304,12 @@ const HomePage = () => {
                             {/* Card 3 - Interactive PDF Chat */}
                             <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-purple-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[400px] flex flex-col">
                                 <div className="p-8 flex-1">
-                                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6 transform group-hover:skew-y-12 transition-all duration-500">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:skew-y-12 transition-all duration-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
                                         Trò Chuyện Với PDF
                                     </h3>
                                     <p className="text-gray-600 leading-relaxed mb-4">
@@ -386,10 +386,10 @@ const HomePage = () => {
                 </svg>
 
                 {/* Applications Section */}
-                <section className="py-32 px-6 sm:px-12 bg-gradient-to-tr from-white to-purple-100/50 backdrop-blur-lg relative z-10">
+                <section className="py-32 px-6 sm:px-12 bg-gradient-to-t from-purple-200 to-white backdrop-blur-lg relative z-10">
                     <div className="max-w-7xl mx-auto">
                         <h2
-                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
+                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
                             style={{ animationDelay: '0.3s', animationFillMode: 'forwards', lineHeight: '1.3' }}
                         >
                             Ứng Dụng Đa Dạng
@@ -402,7 +402,7 @@ const HomePage = () => {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                             <div className="p-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.7s' }}>
-                                <BookOpen size={64} className="text-purple-500 mb-6 mx-auto animate-spin-slow hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
+                                <BookOpen size={64} className="text-purple-600 mb-6 mx-auto animate-spin-slow hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
                                 <h3
                                     className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up text-center font-inter"
                                     style={{ animationDelay: '0.9s', animationFillMode: 'forwards' }}
@@ -417,7 +417,7 @@ const HomePage = () => {
                                 </p>
                             </div>
                             <div className="p-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.8s' }}>
-                                <Target size={64} className="text-pink-500 mb-6 mx-auto animate-spin-slow hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
+                                <Target size={64} className="text-pink-600 mb-6 mx-auto animate-spin-slow hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
                                 <h3
                                     className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up text-center font-inter"
                                     style={{ animationDelay: '1s', animationFillMode: 'forwards' }}
@@ -459,10 +459,10 @@ const HomePage = () => {
                 </svg>
 
                 {/* Features Section */}
-                <section className="py-32 px-6 sm:px-12 bg-gradient-to-tr from-white to-purple-100/50 backdrop-blur-lg relative z-10">
+                <section className="py-32 px-6 sm:px-12 bg-gradient-to-t from-purple-200 to-white backdrop-blur-lg relative z-10">
                     <div className="max-w-7xl mx-auto">
                         <h2
-                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
+                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
                             style={{ animationDelay: '0.3s', animationFillMode: 'forwards', lineHeight: '1.3' }}
                         >
                             Sider: Trí Tuệ Đồng Hành
@@ -476,7 +476,7 @@ const HomePage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                             <div className="flex flex-col items-center text-center p-16 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.7s' }}>
                                 <div className="relative">
-                                    <MessageCircle size={80} className="text-purple-500 mb-6 animate-spin-slow" stroke="url(#iconGradient)" />
+                                    <MessageCircle size={80} className="text-purple-600 mb-6 animate-spin-slow" stroke="url(#iconGradient)" />
                                     <Sparkles size={32} className="absolute -top-4 -right-4 text-purple-400 animate-pulse" />
                                 </div>
                                 <h3
@@ -494,7 +494,7 @@ const HomePage = () => {
                             </div>
                             <div className="flex flex-col items-center text-center p-16 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.8s' }}>
                                 <div className="relative">
-                                    <FileText size={80} className="text-pink-500 mb-6 animate-spin-slow" stroke="url(#iconGradient)" />
+                                    <FileText size={80} className="text-pink-600 mb-6 animate-spin-slow" stroke="url(#iconGradient)" />
                                     <Sparkles size={32} className="absolute -top-4 -right-4 text-purple-400 animate-pulse" />
                                 </div>
                                 <h3
@@ -523,10 +523,10 @@ const HomePage = () => {
                 </svg>
 
                 {/* How It Works Section */}
-                <section className="py-32 px-6 sm:px-12 bg-gradient-to-tr from-purple-100 to-pink-100 relative z-10">
+                <section className="py-32 px-6 sm:px-12 bg-gradient-to-t from-purple-200 to-white relative z-10">
                     <div className="max-w-7xl mx-auto">
                         <h2
-                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
+                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
                             style={{ animationDelay: '0.3s', animationFillMode: 'forwards', lineHeight: '1.3' }}
                         >
                             Sider Hoạt Động Như Thế Nào?
@@ -539,7 +539,7 @@ const HomePage = () => {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                             <div className="flex flex-col items-center text-center p-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.7s' }}>
-                                <Zap size={64} className="text-purple-500 mb-6 animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
+                                <Zap size={64} className="text-purple-600 mb-6 animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
                                 <h3
                                     className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up font-inter"
                                     style={{ animationDelay: '0.9s', animationFillMode: 'forwards' }}
@@ -554,7 +554,7 @@ const HomePage = () => {
                                 </p>
                             </div>
                             <div className="flex flex-col items-center text-center p-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.8s' }}>
-                                <BookOpen size={64} className="text-pink-500 mb-6 animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
+                                <BookOpen size={64} className="text-pink-600 mb-6 animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
                                 <h3
                                     className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up font-inter"
                                     style={{ animationDelay: '1s', animationFillMode: 'forwards' }}
@@ -596,10 +596,10 @@ const HomePage = () => {
                 </svg>
 
                 {/* Global Impact Section */}
-                <section className="py-32 px-6 sm:px-12 bg-gradient-to-tr from-white to-purple-100/50 backdrop-blur-lg relative z-10">
+                <section className="py-32 px-6 sm:px-12 bg-gradient-to-t from-purple-200 to-white backdrop-blur-lg relative z-10">
                     <div className="max-w-7xl mx-auto">
                         <h2
-                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
+                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
                             style={{ animationDelay: '0.3s', animationFillMode: 'forwards', lineHeight: '1.3' }}
                         >
                             Tầm Ảnh Hưởng Toàn Cầu
@@ -642,7 +642,7 @@ const HomePage = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                             <div className="p-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.7s' }}>
-                                <Globe size={64} className="text-purple-500 mb-6 mx-auto animate-spin-slow hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
+                                <Globe size={64} className="text-purple-600 mb-6 mx-auto animate-spin-slow hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
                                 <h3
                                     className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up font-inter"
                                     style={{ animationDelay: '0.9s', animationFillMode: 'forwards' }}
@@ -657,7 +657,7 @@ const HomePage = () => {
                                 </p>
                             </div>
                             <div className="p-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-purple-200/50 hover:bg-white/90 hover:shadow-xl transition-all duration-300 animate-zoom-in" style={{ animationDelay: '0.8s' }}>
-                                <Users size={64} className="text-pink-500 mb-6 mx-auto animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
+                                <Users size={64} className="text-pink-600 mb-6 mx-auto animate-float hover:scale-110 transition-transform duration-300" stroke="url(#iconGradient)" />
                                 <h3
                                     className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up font-inter"
                                     style={{ animationDelay: '1s', animationFillMode: 'forwards' }}
@@ -699,10 +699,10 @@ const HomePage = () => {
                 </svg>
 
                 {/* Success Stories Section */}
-                <section className="py-32 px-6 sm:px-12 bg-gradient-to-tr from-purple-100 to-pink-100 relative z-10">
+                <section className="py-32 px-6 sm:px-12 bg-gradient-to-t from-purple-200 to-white relative z-10">
                     <div className="max-w-7xl mx-auto">
                         <h2
-                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
+                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl pl-4 font-inter"
                             style={{ animationDelay: '0.3s', animationFillMode: 'forwards', lineHeight: '1.3' }}
                         >
                             Câu Chuyện Thành Công
@@ -779,11 +779,11 @@ const HomePage = () => {
                 </svg>
 
                 {/* ChatPDF Demo Section */}
-                <section className="py-32 px-6 sm:px-12 bg-gradient-to-tr from-white to-purple-100/50 backdrop-blur-lg relative z-10">
+                <section className="py-32 px-6 sm:px-12 bg-gradient-to-t from-purple-200 to-white backdrop-blur-lg relative z-10">
                     <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
                         <div className="md:w-1/2">
                             <h2
-                                className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl font-inter"
+                                className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl font-inter"
                                 style={{ animationDelay: '0.3s', animationFillMode: 'forwards', lineHeight: '1.3' }}
                             >
                                 ChatPDF: Biến PDF Thành Tri Thức
@@ -796,7 +796,7 @@ const HomePage = () => {
                             </p>
                             <Link
                                 to="/chatpdf"
-                                className="px-16 py-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl rounded-full shadow-xl transition-all duration-300 hover:brightness-125 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50 animate-pulse-shadow z-50 font-inter"
+                                className="px-16 py-8 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xl rounded-full shadow-xl transition-all duration-300 hover:brightness-125 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50 animate-pulse-shadow z-50 font-inter"
                                 style={{ animationDelay: '0.7s', animationFillMode: 'forwards' }}
                                 aria-label="Thử ChatPDF của Sider"
                             >
@@ -807,7 +807,7 @@ const HomePage = () => {
                             <div className="relative bg-white/80 backdrop-blur-lg p-12 rounded-2xl shadow-xl border border-purple-200/50 transform hover:scale-105 transition duration-300">
                                 <div className="flex items-center justify-between bg-purple-100/50 p-6 rounded-t-xl">
                                     <span className="text-lg font-bold text-gray-900 font-inter">document.pdf</span>
-                                    <Globe size={40} className="text-purple-500 animate-spin-slow" stroke="url(#iconGradient)" />
+                                    <Globe size={40} className="text-purple-600 animate-spin-slow" stroke="url(#iconGradient)" />
                                 </div>
                                 <div className="h-[28rem] bg-gradient-to-b from-gray-50 to-purple-100/30 flex items-center justify-center rounded-b-xl relative overflow-hidden">
                                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
@@ -836,10 +836,10 @@ const HomePage = () => {
                 </svg>
 
                 {/* CTA Section */}
-                <section className="py-32 px-6 sm:px-12 text-center bg-gradient-to-tr from-purple-100 to-pink-100 relative z-10">
+                <section className="py-32 px-6 sm:px-12 text-center bg-gradient-to-t from-purple-200 to-white relative z-10">
                     <div className="max-w-7xl mx-auto">
                         <h2
-                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl mx-auto font-inter"
+                            className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 animate-fade-in-left tracking-tight text-shadow-glow max-w-4xl mx-auto font-inter"
                             style={{ animationDelay: '0.3s', animationFillMode: 'forwards', lineHeight: '1.3' }}
                         >
                             Bắt Đầu Với Sider AI
@@ -853,7 +853,7 @@ const HomePage = () => {
                         <div className="flex flex-col md:flex-row gap-8 justify-center">
                             <Link
                                 to="/pricing"
-                                className="px-16 py-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl rounded-full shadow-xl transition-all duration-300 hover:brightness-125 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50 animate-pulse-shadow z-50 font-inter"
+                                className="px-16 py-8 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xl rounded-full shadow-xl transition-all duration-300 hover:brightness-125 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50 animate-pulse-shadow z-50 font-inter"
                                 style={{ animationDelay: '0.7s', animationFillMode: 'forwards' }}
                                 aria-label="Tham gia Sider ngay"
                             >
@@ -861,7 +861,7 @@ const HomePage = () => {
                             </Link>
                             <Link
                                 to="/chatbot"
-                                className="px-16 py-8 bg-transparent border-3 border-purple-400 text-purple-400 font-bold text-xl rounded-full shadow-xl transition-all duration-300 hover:bg-purple-400 hover:text-white hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50 animate-fade-in-up z-50 font-inter"
+                                className="px-16 py-8 bg-transparent border-3 border-purple-400 text-purple-600 font-bold text-xl rounded-full shadow-xl transition-all duration-300 hover:bg-purple-400 hover:text-white hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50 animate-fade-in-up z-50 font-inter"
                                 style={{ animationDelay: '0.9s', animationFillMode: 'forwards' }}
                                 aria-label="Trải nghiệm miễn phí với Sider"
                             >

@@ -19,23 +19,27 @@ import {
 // UploadHistory component
 function UploadHistory({ uploadHistory }) {
   return (
-    <div className="mt-8 bg-purple-100 rounded-2xl shadow-2xl p-6 border-2 border-pink-200 max-w-6xl mx-auto w-full">
-      <h3 className="text-2xl font-bold text-pink-700 mb-4">Upload History</h3>
+    <div
+      className="mt-8 bg-white rounded-lg shadow-sm p-4 border border-gray-200 max-w-6xl mx-auto w-full"
+      style={{ backgroundColor: "#F5F5F5" }}
+    >
+      <h3 className="text-lg font-semibold text-gray-700 mb-3">Upload History</h3>
       {uploadHistory.length === 0 ? (
-        <p className="text-lg text-pink-600">No files uploaded yet.</p>
+        <p className="text-gray-600 text-sm">No files uploaded yet.</p>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {uploadHistory.map((file, index) => (
             <li
               key={index}
-              className="flex justify-between items-center p-4 bg-purple-100 rounded-lg border border-pink-300 hover:bg-purple-200 transition-colors duration-300 shadow-sm"
+              className="flex justify-between items-center p-3 bg-white rounded-md border border-gray-300 hover:bg-gray-50 transition-colors duration-200"
+              style={{ backgroundColor: "#FAFAFA" }}
             >
               <div>
-                <p className="text-lg font-medium text-pink-800">{file.name}</p>
-                <p className="text-sm text-pink-600">Uploaded: {file.date}</p>
+                <p className="text-sm font-medium text-gray-800">{file.name}</p>
+                <p className="text-xs text-gray-600">Uploaded: {file.date}</p>
               </div>
               <Button
-                className="bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 text-sm font-semibold transition shadow-md"
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md px-3 py-1 text-sm font-medium transition"
                 onClick={() => alert(`Viewing ${file.name}`)}
               >
                 View
@@ -196,14 +200,13 @@ export default function Home() {
     }
   };
 
-  // Log trạng thái để debug
   console.log("pdfPages:", pdfPages);
   console.log("isLoading:", isLoading);
   console.log("pdfLoaded:", pdfLoaded);
   console.log("uploadHistory:", uploadHistory);
 
   return (
-    <main className="flex flex-col min-h-screen bg-purple-100 font-poppins">
+    <main className="flex flex-col min-h-screen bg-white font-poppins">
       <style jsx>{`
         button:disabled {
           opacity: 0.5;
@@ -211,12 +214,9 @@ export default function Home() {
           visibility: visible !important;
         }
       `}</style>
-      <div className="p-6 border-b bg-purple-100 shadow-lg">
+      <div className="p-6 border-b bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-6">
-          <h1 className="text-4xl font-extrabold text-pink-700 tracking-tight">
-            PDF Translator
-          </h1>
-
+          <h1 className="text-3xl font-bold text-gray-800">PDF Translator</h1>
           <div className="flex items-center gap-6">
             <FileUploader
               setPdfFile={setPdfFile}
@@ -225,7 +225,7 @@ export default function Home() {
               setIsLoading={setIsLoading}
               pdfLoaded={pdfLoaded}
               onFileUpload={handleFileUpload}
-              className="bg-purple-100 border-2 border-pink-300 rounded-lg p-2 hover:bg-purple-200 transition"
+              className="bg-white border border-gray-300 rounded-lg p-2 hover:bg-gray-50 transition"
             />
           </div>
         </div>
@@ -234,29 +234,35 @@ export default function Home() {
       {pdfFile ? (
         <div className="flex flex-1 h-[calc(100vh-120px)] relative">
           <div
-            className={`border-r bg-purple-50 shadow-md transition-all duration-300 flex flex-col ${leftSidebarState === "hidden"
-                ? "w-0 overflow-hidden"
-                : leftSidebarState === "collapsed"
-                  ? "w-16"
-                  : "w-72"
+            className={`border-r bg-white shadow-md transition-all duration-300 flex flex-col ${leftSidebarState === "hidden"
+              ? "w-0 overflow-hidden"
+              : leftSidebarState === "collapsed"
+                ? "w-16"
+                : "w-72"
               }`}
+            style={{ backgroundColor: "#F5F5F5" }}
           >
-            <div className="p-4 border-b flex items-center justify-between bg-purple-100">
+            <div
+              className="p-4 border-b flex items-center justify-between bg-white"
+              style={{ backgroundColor: "#F5F5F5" }}
+            >
               {leftSidebarState === "expanded" && (
                 <>
-                  <h2 className="text-xl font-bold text-pink-700">All Slides</h2>
+                  <h2 className="text-xl font-semibold text-gray-700" style={{ color: "#4A4A4A" }}>
+                    All Slides
+                  </h2>
                   <button
                     onClick={closeLeftSidebar}
-                    className="text-pink-600 hover:text-pink-800 transition"
+                    className="text-gray-600 hover:text-gray-800 transition"
                     aria-label="Close sidebar"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-5 w-5 text-gray-700" />
                   </button>
                 </>
               )}
               {leftSidebarState === "collapsed" && (
                 <div className="w-full flex justify-center">
-                  <FileText className="h-6 w-6 text-pink-700" />
+                  <FileText className="h-6 w-6 text-gray-700" />
                 </div>
               )}
             </div>
@@ -264,14 +270,14 @@ export default function Home() {
               className={`flex-1 overflow-auto ${leftSidebarState === "expanded" ? "p-4" : "p-2"}`}
             >
               {leftSidebarState === "collapsed" ? (
-                <div className="flex flex-col items-center space-y-4 mt-2">
+                <div className="flex flex-col items-center space-y-2 mt-2">
                   {pdfPages.length > 0 && (
                     <button
                       onClick={toggleLeftSidebar}
-                      className="w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition bg-purple-100 text-pink-700 hover:bg-purple-200 shadow-sm"
+                      className="w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition bg-white border border-gray-300 hover:bg-gray-50 shadow-sm"
                       aria-label="Toggle sidebar"
                     >
-                      <Grid className="h-6 w-6 text-pink-700" />
+                      <Grid className="h-6 w-6 text-gray-700" />
                     </button>
                   )}
                   {pdfPages.map((page, index) => (
@@ -282,9 +288,10 @@ export default function Home() {
                         setCurrentPage(index);
                       }}
                       className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${currentPage === index
-                          ? "bg-pink-200 text-pink-800 border border-pink-400 shadow-md"
-                          : "bg-purple-100 text-pink-700 hover:bg-purple-200 shadow-sm"
+                        ? "bg-gray-200 text-gray-800 border border-gray-400 shadow-md"
+                        : "bg-white border border-gray-300 hover:bg-gray-50 shadow-sm"
                         }`}
+                      style={{ color: "#4A4A4A" }}
                     >
                       {page.pageNumber}
                     </button>
@@ -300,14 +307,14 @@ export default function Home() {
                 )
               )}
             </div>
-            <div className="p-3 border-b bg-purple-100 flex justify-center">
+            <div className="p-3 border-b bg-white flex justify-center">
               <button
                 onClick={toggleLeftSidebar}
-                className="p-2 rounded-lg hover:bg-purple-200 transition"
+                className="p-2 rounded-lg hover:bg-gray-100 transition"
                 aria-label={leftSidebarState === "expanded" ? "Collapse sidebar" : "Expand sidebar"}
               >
                 <PanelLeft
-                  className={`h-6 w-6 text-pink-700 transition-transform ${leftSidebarState === "expanded" ? "rotate-180" : ""
+                  className={`h-6 w-6 text-gray-700 transition-transform ${leftSidebarState === "expanded" ? "rotate-180" : ""
                     }`}
                 />
               </button>
@@ -317,25 +324,27 @@ export default function Home() {
           {leftSidebarState === "hidden" && (
             <button
               onClick={toggleLeftSidebar}
-              className="bg-purple-100 border-y border-r p-3 hover:bg-purple-200 transition shadow-md"
+              className="bg-white border-y border-r p-3 hover:bg-gray-100 transition shadow-md"
               aria-label="Show slide preview"
             >
-              <ChevronRight className="h-6 w-6 text-pink-700" />
+              <ChevronRight className="h-6 w-6 text-gray-700" />
             </button>
           )}
 
           <div className="flex-1 flex flex-row min-h-0">
             <div className="w-1/2 flex flex-col min-h-0 border-r">
               <div
-                className="p-4 bg-purple-100 border-b sticky z-20 shadow-sm"
-                style={{ top: "72px" }}
+                className="p-4 bg-white border-b sticky z-20 shadow-sm"
+                style={{ backgroundColor: "#F5F5F5", top: "64px" }} // Adjust `top` to match nav bar height
               >
-                <h2 className="text-2xl font-bold text-pink-700">Original Slides</h2>
+                <h2 className="text-xl font-semibold text-gray-700" style={{ color: "#4A4A4A" }}>
+                  Original Slides
+                </h2>
               </div>
               <div
                 id="original-slide-container"
                 ref={originalContainerRef}
-                className="flex-1 p-6 overflow-y-auto bg-purple-100 rounded-lg shadow-md"
+                className="flex-1 p-6 overflow-y-auto bg-white rounded-lg shadow-inner"
               >
                 <SlideViewer pages={pdfPages} currentPage={currentPage} pdfFile={pdfFile} />
               </div>
@@ -343,19 +352,21 @@ export default function Home() {
 
             <div className="w-1/2 flex flex-col min-h-0">
               <div
-                className="p-4 bg-purple-100 border-b sticky z-20 shadow-sm"
-                style={{ top: "72px" }}
+                className="p-4 bg-white border-b sticky z-20 shadow-sm"
+                style={{ backgroundColor: "#F5F5F5", top: "64px" }} // Adjust `top` to match nav bar height
               >
-                <h2 className="text-2xl font-bold text-pink-700">Translated Slides</h2>
+                <h2 className="text-xl font-semibold text-gray-700" style={{ color: "#4A4A4A" }}>
+                  Translated Slides
+                </h2>
                 <div className="flex items-center gap-3 mt-2">
-                  <label htmlFor="language" className="text-base font-medium text-pink-800">
+                  <label htmlFor="language" className="text-sm font-medium text-gray-700">
                     Translate to:
                   </label>
                   <select
                     id="language"
                     value={targetLanguage}
                     onChange={(e) => setTargetLanguage(e.target.value)}
-                    className="border border-pink-300 rounded-lg px-3 py-2 text-base bg-purple-100 text-pink-900 focus:ring-2 focus:ring-pink-400 transition shadow-sm"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:ring-2 focus:ring-purple-200 transition shadow-sm"
                   >
                     {languages.map((lang) => (
                       <option key={lang.code} value={lang.code}>
@@ -366,7 +377,7 @@ export default function Home() {
                   <Button
                     onClick={analyzeAndTranslateContent}
                     disabled={pdfPages.length === 0 || isLoading}
-                    className="bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-6 py-2 text-base font-semibold transition shadow-md hover:shadow-lg"
+                    className="bg-purple-200 hover:bg-purple-300 text-gray-800 rounded-lg px-6 py-2 text-sm font-medium transition shadow-md hover:shadow-lg"
                   >
                     Translate
                   </Button>
@@ -375,7 +386,7 @@ export default function Home() {
               <div
                 id="translated-slide-container"
                 ref={translatedContainerRef}
-                className="flex-1 p-6 overflow-y-auto bg-purple-100 rounded-lg shadow-md"
+                className="flex-1 p-6 overflow-y-auto bg-white rounded-lg shadow-inner"
               >
                 <TranslatedSlide
                   translatedPages={translatedPages}
@@ -388,6 +399,7 @@ export default function Home() {
             </div>
           </div>
 
+          
           <ChatBot
             pdfContent={pdfPages[currentPage]?.textContent || ""}
             isChatVisible={isChatVisible}
@@ -395,12 +407,12 @@ export default function Home() {
           />
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center flex-grow p-12 bg-purple-50 min-h-screen">
-          <div className="text-center p-8 sm:p-12 md:p-16 border-2 border-pink-200 rounded-2xl bg-purple-100 shadow-2xl max-w-6xl w-full mx-4">
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-pink-700 mb-6">
+        <div className="flex flex-col items-center justify-center flex-grow p-12 sm:p-14 md:p-16 bg-gray-100 min-h-screen">
+          <div className="text-center p-10 sm:p-12 md:p-14 border border-gray-200 rounded-2xl bg-purple-50 shadow-md max-w-6xl w-full mx-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-8">
               Welcome to PDF Translator
             </h2>
-            <p className="text-lg sm:text-xl text-pink-600 mb-8 font-medium">
+            <p className="text-base sm:text-lg text-gray-600 mb-10 font-medium">
               Upload a PDF file to get started
             </p>
             <div className="flex justify-center">
@@ -412,8 +424,14 @@ export default function Home() {
                   setIsLoading={setIsLoading}
                   pdfLoaded={pdfLoaded}
                   onFileUpload={handleFileUpload}
-                  className="w-full p-8 sm:p-10 bg-purple-100 border-2 border-dashed border-pink-300 rounded-xl shadow-sm"
-                />
+                  className="w-full max-w-md p-8 sm:p-10 bg-purple-50 border border-purple-200 rounded-2xl shadow-sm hover:bg-purple-100 transition duration-200"
+                >
+                  <div className="text-center">
+                    <FileText className="h-12 w-12 text-purple-300 mx-auto mb-4" />
+                    <p className="text-gray-700 font-medium mb-2">Drag and drop or click to upload a PDF</p>
+                    <p className="text-sm text-gray-500">Supported formats: PDF (max 10MB)</p>
+                  </div>
+                </FileUploader>
               </div>
             </div>
           </div>
@@ -426,18 +444,18 @@ export default function Home() {
           <Button
             size="sm"
             variant="outline"
-            className="rounded-full h-12 w-12 p-0 bg-purple-100 shadow-lg border-pink-300 hover:bg-purple-200 transition"
+            className="rounded-full h-12 w-12 p-0 bg-gray-100 shadow-md border-gray-300 hover:bg-gray-200 transition"
             onClick={toggleLeftSidebar}
           >
-            <Grid className="h-6 w-6 text-pink-700" />
+            <Grid className="h-6 w-6 text-gray-700" />
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="rounded-full h-12 w-12 p-0 bg-purple-100 shadow-lg border-pink-300 hover:bg-purple-200 transition"
+            className="rounded-full h-12 w-12 p-0 bg-gray-100 shadow-md border-gray-300 hover:bg-gray-200 transition"
             onClick={() => setIsChatVisible((prev) => !prev)}
           >
-            <MessageSquare className="h-6 w-6 text-pink-700" />
+            <MessageSquare className="h-6 w-6 text-gray-700" />
           </Button>
         </div>
       )}
