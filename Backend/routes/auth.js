@@ -30,7 +30,7 @@ router.get(
         return res.redirect(`${process.env.FRONTEND_URL}/error?msg=auth_failed`);
       }
       if (!user) {
-         return res.redirect(`${process.env.FRONTEND_URL}/login`);
+        return res.redirect(`${process.env.FRONTEND_URL}/login`);
       }
 
       req.logIn(user, (err) => {
@@ -50,10 +50,16 @@ router.get(
         }
 
         if (!redirectPath || !redirectPath.startsWith('/')) {
-            redirectPath = '/home' + (redirectPath || '');
+          redirectPath = '/home' + (redirectPath || '');
         }
 
-        return res.redirect(`${process.env.FRONTEND_URL}${redirectPath}`);
+        // Tùy theo vai trò, chọn URL đúng
+        let baseUrl = process.env.FRONTEND_URL;
+        if (originalUrl === '/admin-login' && user.role === 'admin') {
+          baseUrl = process.env.ADMIN_FRONTEND_URL || 'http://localhost:3001';
+        }
+
+        return res.redirect(`${baseUrl}${redirectPath}`);
       });
     })(req, res, next);
   }
@@ -64,8 +70,8 @@ router.get('/user', ensureAuthenticated, (req, res) => {
   res.json(req.user || req.session.user);
 });
 
-  // API Logout
-  router.post('/logout', (req, res) => {
+// API Logout
+router.post('/logout', (req, res) => {
   req.logout((err) => {
     if (err) {
       console.error('Logout error:', err.message);
