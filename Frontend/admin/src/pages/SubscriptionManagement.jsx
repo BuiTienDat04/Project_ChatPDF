@@ -55,7 +55,7 @@ function SubscriptionManagement() {
         };
 
         if (isLoadingPage || (currentUser._id && subscriptions.length === 0) || pageError) {
-             fetchAllData();
+            fetchAllData();
         }
 
     }, [currentUser._id, navigate, subscriptions.length, pageError]);
@@ -119,16 +119,21 @@ function SubscriptionManagement() {
                                         key={user._id}
                                         className="hover:bg-gray-200 transition duration-150 ease-in-out"
                                     >
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center gap-3">
+                                            <img
+                                                src={user.picture}
+                                                alt={user.fullName}
+                                                className="w-8 h-8 rounded-full object-cover border border-gray-300"
+                                            />
                                             {user.fullName}
                                         </td>
+
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {user.email}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                user.currentSubscription ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                            }`}>
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.currentSubscription ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                }`}>
                                                 {user.currentSubscription ? 'Active' : 'No Active Subscription'}
                                             </span>
                                         </td>
