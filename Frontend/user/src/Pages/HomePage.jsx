@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import FullScreenZoomScroll from '../components/FullScreenZoomScroll';
 import { MessageCircle, FileText, Globe, Star, Zap, BookOpen, Rocket, Sparkles, Users, Lightbulb, Target } from 'lucide-react';
 
 const HomePage = () => {
@@ -11,141 +12,161 @@ const HomePage = () => {
             <div className="fixed inset-0 "></div>
             <Navigation />
             <main className="w-full relative z-10">
-                {/* Hero Section */}
-                <section className="relative flex flex-col items-start px-6 overflow-hidden bg-white">
-                    {/* Cosmic Blob with Purple-Pink Gradient */}
-                    <div className="absolute inset-0 opacity-30 pointer-events-none animate-blob-pulse">
-                        <svg
-                            className="w-full h-full scale-150 transform translate-y-10"
-                            viewBox="0 0 200 200"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                fill="url(#heroBlob)"
-                                d="M44.7,-76.2C58.5,-69.2,70.2,-54.2,76.2,-38.2C82.2,-22.2,82.5,-5.2,78.2,11.8C73.9,28.8,65,45.8,52.5,58.2C40,70.6,23.5,78.4,5.5,80.8C-12.5,83.2,-29.5,80.2,-44.5,73.2C-59.5,66.2,-72.5,55.2,-79.8,41.2C-87.1,27.2,-88.7,10.2,-84.2,-6.8C-79.7,-23.8,-69.1,-40.8,-56.5,-56.8C-43.9,-72.8,-29.5,-87.8,-13.5,-89.8C2.5,-91.8,18.5,-80.8,44.7,-76.2Z"
-                                transform="translate(100 100)"
-                                filter="url(#blobGlow)"
-                            />
-                            <defs>
-                                <linearGradient id="heroBlob" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style={{ stopColor: '#C084FC', stopOpacity: 0.9 }} />
-                                    <stop offset="100%" style={{ stopColor: '#FBCFE8', stopOpacity: 0.8 }} />
-                                </linearGradient>
-                                <filter id="blobGlow">
-                                    <feGaussianBlur stdDeviation="3" />
-                                    <feComponentTransfer>
-                                        <feFuncA type="linear" slope="1.4" />
-                                    </feComponentTransfer>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </div>
-                    {/* Enhanced Particles with Sparkle Effect */}
-                    <div className="absolute inset-0 pointer-events-none animate-particle-float">
-                        {[...Array(40)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="absolute bg-gradient-to-r from-purple-200 to-pink-200 rounded-full opacity-50 animate-particle-sparkle"
-                                style={{
-                                    width: `${Math.random() * 12 + 6}px`,
-                                    height: `${Math.random() * 12 + 6}px`,
-                                    left: `${Math.random() * 100}%`,
-                                    top: `${Math.random() * 100}%`,
-                                    animationDelay: `${Math.random() * 8}s`,
-                                    animationDuration: `${Math.random() * 15 + 8}s`,
-                                }}
-                            ></div>
-                        ))}
-                    </div>
-                    {/* Galactic Orb with Subtle Glow */}
-                    <div className="absolute right-6 top-1/4 hidden lg:block animate-float">
-                        <svg
-                            className="w-64 h-64"
-                            viewBox="0 0 100 100"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <circle cx="50" cy="50" r="40" fill="url(#orbGradient)" className="animate-pulse-glow" filter="url(#orbGlow)" />
-                            <circle cx="50" cy="50" r="30" fill="none" stroke="url(#orbStroke)" strokeWidth="4" className="animate-spin-slow" />
-                            <defs>
-                                <linearGradient id="orbGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style={{ stopColor: '#C084FC', stopOpacity: 0.9 }} />
-                                    <stop offset="100%" style={{ stopColor: '#FBCFE8', stopOpacity: 0.8 }} />
-                                </linearGradient>
-                                <linearGradient id="orbStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style={{ stopColor: '#A78BFA', stopOpacity: 1 }} />
-                                    <stop offset="100%" style={{ stopColor: '#FBCFE8', stopOpacity: 1 }} />
-                                </linearGradient>
-                                <filter id="orbGlow">
-                                    <feGaussianBlur stdDeviation="4" />
-                                    <feComponentTransfer>
-                                        <feFuncA type="linear" slope="1.6" />
-                                    </feComponentTransfer>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </div>
 
-                    <div className="relative z-20 pt-20 pb-28 px-4 sm:px-8 lg:px-12 max-w-7xl mx-auto">
-                        <style>
-                            {`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-                .font-inter { font-family: 'Inter', sans-serif; }
-                @keyframes sparkle {
-                  0%, 100% { opacity: 0.3; transform: scale(1); }
-                  50% { opacity: 0.8; transform: scale(1.5); }
-                }
-                .animate-sparkle { animation: sparkle 3s infinite ease-in-out; }
-                @keyframes pulse-shadow {
-                  0% { box-shadow: 0 0 10px rgba(192, 132, 252, 0.5); }
-                  50% { box-shadow: 0 0 20px rgba(192, 132, 252, 0.8); }
-                  100% { box-shadow: 0 0 10px rgba(192, 132, 252, 0.5); }
-                }
-                .animate-pulse-shadow { animation: pulse-shadow 2s infinite ease-in-out; }
-              `}
-                        </style>
-                        <span className="inline-block px-8 py-4 mb-6 text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg font-inter mt-10 animate-pulse-shadow">
-                            AI Đổi Mới Ngôn Ngữ
-                        </span>
+                {/* --- Start of FullScreenZoomScroll Section --- */}
+                <FullScreenZoomScroll />
+                {/* --- End of FullScreenZoomScroll Section --- */}
 
-                        <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-10 tracking-tight max-w-4xl font-inter">
-                            Sider AI - Kết Nối Tri Thức Toàn Cầu
-                        </h1>
-
-                        <p className="text-2xl md:text-3xl text-gray-700 max-w-5xl mb-12 leading-relaxed font-inter">
-                            <span className="block mb-4">Tăng tốc giao tiếp và khám phá tài liệu với</span>
-                            <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg shadow-md animate-pulse-shadow">AI đa ngôn ngữ thông minh</span>
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row gap-8 mb-16">
-                            <Link
-                                to="/chatbot"
-                                className="px-16 py-8 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xl rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:brightness-110 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-300/50 font-inter animate-pulse-shadow"
-                            >
-                                Trò Chuyện Với AI
-                            </Link>
-                            <Link
-                                to="/chatpdf"
-                                className="px-16 py-8 bg-white border-2 border-purple-400 text-purple-600 font-bold text-xl rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:bg-purple-50 hover:border-purple-500 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-300/50 font-inter animate-pulse-shadow"
-                            >
-                                Dịch PDF Đa Ngôn Ngữ
-                            </Link>
+                {/* Core Features Section */}
+                <section className="py-32 px-6 sm:px-12 relative z-10 pt-20">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="mb-20 space-y-4 pl-4">
+                            <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 tracking-tight font-inter animate-slide-in-left pb-1">
+                                Chinh Phục PDF Với AI
+                            </h2>
+                            <p className="text-2xl text-gray-700 max-w-3xl leading-relaxed font-inter animate-slide-in-left delay-100 mt-4">
+                                Biến tài liệu PDF thành công cụ tri thức mạnh mẽ với khả năng dịch thuật và phân tích thông minh của Sider.
+                            </p>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 max-w-5xl">
-                            <div className="flex flex-col items-center">
-                                <span className="text-5xl font-bold text-purple-600 font-inter animate-pulse-shadow">98%+</span>
-                                <p className="text-xl text-gray-700 text-center font-inter">Độ chính xác dịch thuật</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {/* Card 1 - Instant PDF Translation */}
+                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-purple-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[450px] flex flex-col">
+                                <div className="p-8 flex-1">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-[360deg] transition-all duration-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
+                                        Dịch Thuật Tức Thời
+                                    </h3>
+                                    <p className="text-gray-600 leading-relaxed mb-4">
+                                        <span className="highlight-text">Dịch PDF nhanh chóng</span> sang hơn 100 ngôn ngữ, giữ nguyên định dạng và cấu trúc tài liệu.
+                                    </p>
+                                    <div className="space-y-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <div className="flex items-center text-sm text-purple-600 font-medium">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                            <span>Hỗ trợ PDF scan và tài liệu phức tạp</span>
+                                        </div>
+                                        <div className="flex items-center text-sm text-pink-600 font-medium">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clipRule="evenodd" />
+                                            </svg>
+                                            <span>Bảo toàn bố cục và hình ảnh</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-purple-50 p-4 text-center border-t border-purple-100">
+                                    <span className="text-sm font-semibold text-purple-600">Độ chính xác 98.5%</span>
+                                </div>
                             </div>
-                            <div className="flex flex-col items-center">
-                                <span className="text-5xl font-bold text-pink-600 font-inter animate-pulse-shadow">100+</span>
-                                <p className="text-xl text-gray-700 text-center font-inter">Ngôn ngữ hỗ trợ</p>
+
+                            {/* Card 2 - Smart PDF Analysis */}
+                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-pink-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[450px] flex flex-col">
+                                <div className="p-8 flex-1">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:scale-125 transition-all duration-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-pink-700 to-purple-600 bg-clip-text text-transparent">
+                                        Phân Tích Thông Minh
+                                    </h3>
+                                    <p className="text-gray-600 leading-relaxed mb-4">
+                                        <span className="highlight-text">AI tiên tiến</span> phân tích nội dung PDF, tóm tắt và trích xuất thông tin quan trọng trong tích tắc.
+                                    </p>
+                                    <div className="relative h-24 w-full bg-gray-100 rounded-lg overflow-hidden mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shine">
+                                            <div className="pdf-mockup">
+                                                <div className="pdf-line animate-pulse" />
+                                                <div className="pdf-line animate-pulse delay-100" />
+                                                <div className="pdf-line animate-pulse delay-200" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-pink-50 p-4 text-center border-t border-pink-100">
+                                    <span className="text-sm font-semibold text-pink-600">Xử lý 1000+ trang/phút</span>
+                                </div>
                             </div>
-                            <div className="flex flex-col items-center">
-                                <span className="text-5xl font-bold text-purple-400 font-inter animate-pulse-shadow">2s</span>
-                                <p className="text-xl text-gray-700 text-center font-inter">Tốc độ xử lý tức thời</p>
+
+                            {/* Card 3 - Interactive PDF Chat */}
+                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-purple-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[450px] flex flex-col">
+                                <div className="p-8 flex-1">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:skew-y-12 transition-all duration-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-4 font-inter bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
+                                        Trò Chuyện Với PDF
+                                    </h3>
+                                    <p className="text-gray-600 leading-relaxed mb-4">
+                                        <span className="highlight-text">Tương tác trực tiếp</span> với tài liệu PDF, đặt câu hỏi và nhận câu trả lời tức thời từ nội dung.
+                                    </p>
+                                    <div className="space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <div className="chat-bubble animate-float">
+                                            <span className="text-sm">Tóm tắt nội dung này cho tôi!</span>
+                                        </div>
+                                        <div className="chat-bubble animate-float delay-150">
+                                            <span className="text-sm">Trích xuất dữ liệu chính!</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-purple-50 p-4 text-center border-t border-purple-100">
+                                    <span className="text-sm font-semibold text-purple-600">Hỗ trợ 24/7</span>
+                                </div>
                             </div>
                         </div>
+                        <div className="hidden md:block absolute inset-x-0 mx-auto w-3/4 h-1 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full opacity-50 -mt-8 animate-pulse-slow" />
                     </div>
+                    <style jsx>{`
+                        .highlight-text {
+                        background-image: linear-gradient(120deg, #A78BFA 0%, #EC4899 100%);
+                        -webkit-background-clip: text;
+                        background-clip: text;
+                        color: transparent;
+                        font-weight: 600;
+                        }
+                        .pdf-mockup .pdf-line {
+                        height: 4px;
+                        background: #f3f4f6;
+                        margin: 8px;
+                        border-radius: 2px;
+                        }
+                        .chat-bubble {
+                        background: #EDE9FE;
+                        padding: 8px 12px;
+                        border-radius: 1rem;
+                        display: inline-block;
+                        position: relative;
+                        max-width: 80%;
+                        }
+                        .chat-bubble:before {
+                        content: '';
+                        position: absolute;
+                        width: 0;
+                        height: 0;
+                        border-left: 8px solid transparent;
+                        border-right: 8px solid #EDE9FE;
+                        border-top: 8px solid transparent;
+                        border-bottom: 8px solid transparent;
+                        left: -16px;
+                        top: 12px;
+                        }
+                        @keyframes shine {
+                        to {
+                            background-position: 200% center;
+                        }
+                        }
+                        .animate-shine {
+                        background-size: 200% auto;
+                        animation: shine 2s linear infinite;
+                        }
+                    `}</style>
                 </section>
 
                 {/* Wave Divider */}
@@ -226,10 +247,10 @@ const HomePage = () => {
                 </svg>
 
                 {/* Core Features Section */}
-                <section className="py-32 px-6 sm:px-12 relative z-10">
+                <section className="py-32 px-6 sm:px-12 relative z-10 pt-20">
                     <div className="max-w-7xl mx-auto">
                         <div className="mb-20 space-y-4 pl-4">
-                            <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 tracking-tight font-inter animate-slide-in-left">
+                            <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 tracking-tight font-inter animate-slide-in-left pb-1"> {/* Đã thêm pb-1 */}
                                 Chinh Phục PDF Với AI
                             </h2>
                             <p className="text-2xl text-gray-700 max-w-3xl leading-relaxed font-inter animate-slide-in-left delay-100">
@@ -239,7 +260,7 @@ const HomePage = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {/* Card 1 - Instant PDF Translation */}
-                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-purple-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[400px] flex flex-col">
+                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-purple-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[450px] flex flex-col"> {/* Đã tăng chiều cao lên h-[450px] */}
                                 <div className="p-8 flex-1">
                                     <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-[360deg] transition-all duration-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,7 +294,7 @@ const HomePage = () => {
                             </div>
 
                             {/* Card 2 - Smart PDF Analysis */}
-                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-pink-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[400px] flex flex-col">
+                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-pink-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[450px] flex flex-col"> {/* Đã tăng chiều cao lên h-[450px] */}
                                 <div className="p-8 flex-1">
                                     <div className="w-16 h-16 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:scale-125 transition-all duration-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -302,7 +323,7 @@ const HomePage = () => {
                             </div>
 
                             {/* Card 3 - Interactive PDF Chat */}
-                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-purple-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[400px] flex flex-col">
+                            <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl hover:shadow-3xl border-2 border-transparent hover:border-purple-300 transition-all duration-300 cursor-pointer group relative overflow-hidden transform hover:-translate-y-2 h-[450px] flex flex-col"> {/* Đã tăng chiều cao lên h-[450px] */}
                                 <div className="p-8 flex-1">
                                     <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:skew-y-12 transition-all duration-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
