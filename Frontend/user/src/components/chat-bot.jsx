@@ -1,8 +1,19 @@
-import { useState, useRef, useEffect } from "react";
-import { Button } from "./ui/button";
+import React, { useState, useRef, useEffect } from "react";
 import { SendIcon, ChevronLeft, ChevronRight, BotMessageSquare } from "lucide-react";
 
-export default function ChatBot({ pdfContent, isChatVisible, setIsChatVisible }) {
+// Component Button đơn giản
+function Button({ children, className, ...props }) {
+  return (
+    <button
+      className={`px-4 py-2 rounded-md ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default function ChatBot() {
   const [messages, setMessages] = useState([
     {
       role: "system",
@@ -11,12 +22,31 @@ export default function ChatBot({ pdfContent, isChatVisible, setIsChatVisible })
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isChatVisible, setIsChatVisible] = useState(true);
   const messagesEndRef = useRef(null);
+  const pdfContent = "Đây là nội dung mẫu của một slide trình bày về trí tuệ nhân tạo (AI).";
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
+
+  // Hàm giải lập phản hồi AI
+  const simulateAIResponse = (question) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        let responseText = "";
+        if (question.toLowerCase().includes("gì") || question.toLowerCase().includes("what")) {
+          responseText = `Slide này nói về: ${pdfContent}`;
+        } else if (question.toLowerCase().includes("tóm tắt") || question.toLowerCase().includes("summary")) {
+          responseText = `Tóm tắt: ${pdfContent.slice(0, 50)}...`;
+        } else {
+          responseText = `Bạn hỏi: "${question}". Dựa trên slide: ${pdfContent}`;
+        }
+        resolve(responseText);
+      }, 1000); // Giả lập độ trễ 1 giây
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,37 +60,21 @@ export default function ChatBot({ pdfContent, isChatVisible, setIsChatVisible })
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat-with-ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          question: userMessage.content,
-          context: pdfContent,
-          chatHistory: messages.slice(0, -1),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const aiResponseContent = data.response || data.text;
+      // Gọi hàm giả lập thay vì fetch
+      const aiResponseContent = await simulateAIResponse(input);
 
       const aiMessage = {
         role: "assistant",
-        content: aiResponseContent || "Xin lỗi, tôi không thể tạo ra phản hồi lúc này.",
+        content: aiResponseContent,
       };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
-      console.error("Lỗi khi gọi API AI:", error);
+      console.error("Lỗi giả lập:", error);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "Xin lỗi, đã có lỗi xảy ra khi kết nối với AI. Vui lòng thử lại sau.",
+          content: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
         },
       ]);
     } finally {
@@ -74,7 +88,7 @@ export default function ChatBot({ pdfContent, isChatVisible, setIsChatVisible })
   };
 
   return (
-    <div className="fixed top-0 right-0 h-screen z-50 pointer-events-none">
+    <div className="fixed top-0 right-0 h-screen z-50 ">
       {/* Toggle button */}
       <button
         onClick={toggleChatVisibility}

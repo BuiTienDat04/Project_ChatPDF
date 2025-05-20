@@ -20,8 +20,8 @@ import {
 function UploadHistory({ uploadHistory }) {
   return (
     <div
-      className="mt-8 bg-white rounded-lg shadow-sm p-4 border border-gray-200 max-w-6xl mx-auto w-full"
-      style={{ backgroundColor: "#F5F5F5" }}
+      className="mt-8 p-4 border border-purple-300 rounded-lg shadow-sm max-w-6xl mx-auto w-full"
+      style={{ backgroundColor: "#F3E8FF" }}
     >
       <h3 className="text-lg font-semibold text-gray-700 mb-3">Upload History</h3>
       {uploadHistory.length === 0 ? (
@@ -31,15 +31,14 @@ function UploadHistory({ uploadHistory }) {
           {uploadHistory.map((file, index) => (
             <li
               key={index}
-              className="flex justify-between items-center p-3 bg-white rounded-md border border-gray-300 hover:bg-gray-50 transition-colors duration-200"
-              style={{ backgroundColor: "#FAFAFA" }}
+              className="flex justify-between items-center p-3 bg-purple-100 rounded-md border border-purple-300 hover:bg-purple-200 transition-colors duration-200"
             >
               <div>
                 <p className="text-sm font-medium text-gray-800">{file.name}</p>
                 <p className="text-xs text-gray-600">Uploaded: {file.date}</p>
               </div>
               <Button
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md px-3 py-1 text-sm font-medium transition"
+                className="bg-purple-200 hover:bg-purple-300 text-gray-800 rounded-md px-3 py-1 text-sm font-medium transition"
                 onClick={() => alert(`Viewing ${file.name}`)}
               >
                 View
@@ -399,7 +398,7 @@ export default function Home() {
             </div>
           </div>
 
-          
+
           <ChatBot
             pdfContent={pdfPages[currentPage]?.textContent || ""}
             isChatVisible={isChatVisible}
@@ -408,7 +407,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center flex-grow p-12 sm:p-14 md:p-16 bg-gray-100 min-h-screen">
-          <div className="text-center p-10 sm:p-12 md:p-14 border border-gray-200 rounded-2xl bg-purple-50 shadow-md max-w-6xl w-full mx-4">
+          <div className="text-center p-10 sm:p-12 md:p-14 border border-gray-200 rounded-2xl bg-purple-100 shadow-md max-w-6xl w-full mx-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-8">
               Welcome to PDF Translator
             </h2>
@@ -424,10 +423,10 @@ export default function Home() {
                   setIsLoading={setIsLoading}
                   pdfLoaded={pdfLoaded}
                   onFileUpload={handleFileUpload}
-                  className="w-full max-w-md p-8 sm:p-10 bg-purple-50 border border-purple-200 rounded-2xl shadow-sm hover:bg-purple-100 transition duration-200"
+                  className="w-full max-w-md p-8 sm:p-10 bg-purple-100 border border-purple-300 rounded-2xl shadow-sm hover:bg-purple-200 transition duration-200"
                 >
                   <div className="text-center">
-                    <FileText className="h-12 w-12 text-purple-300 mx-auto mb-4" />
+                    <FileText className="h-12 w-12 text-purple-400 mx-auto mb-4" />
                     <p className="text-gray-700 font-medium mb-2">Drag and drop or click to upload a PDF</p>
                     <p className="text-sm text-gray-500">Supported formats: PDF (max 10MB)</p>
                   </div>
@@ -435,7 +434,12 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <UploadHistory uploadHistory={uploadHistory} />
+          <div className="mt-8 p-10 sm:p-12 md:p-14 border border-purple-300 rounded-2xl bg-purple-100 shadow-md max-w-6xl w-full mx-4">
+            <UploadHistory
+              uploadHistory={uploadHistory}
+              className="text-gray-700 font-medium"
+            />
+          </div>
         </div>
       )}
 
