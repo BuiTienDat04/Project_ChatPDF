@@ -58,24 +58,14 @@ export default function Home() {
   const [pdfLoaded, setPdfLoaded] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(true);
   const [uploadHistory, setUploadHistory] = useState([]);
-  const [isPageReloaded, setIsPageReloaded] = useState(false); // State để kiểm tra load lại trang
   const originalContainerRef = useRef(null);
   const translatedContainerRef = useRef(null);
 
   // Sidebar state: "collapsed", "expanded", or "hidden"
   const [leftSidebarState, setLeftSidebarState] = useState("expanded");
 
-  // Load PDF.js script và kiểm tra load lại trang
+  // Load PDF.js script
   useEffect(() => {
-    // Kiểm tra nếu trang được load lại
-    setIsPageReloaded(true);
-
-    // Load dữ liệu từ localStorage khi trang được load
-    const savedHistory = localStorage.getItem("uploadHistory");
-    if (savedHistory) {
-      setUploadHistory(JSON.parse(savedHistory));
-    }
-
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
     script.async = true;
@@ -95,11 +85,6 @@ export default function Home() {
       document.body.removeChild(script);
     };
   }, []);
-
-  // Lưu uploadHistory vào localStorage mỗi khi nó thay đổi
-  useEffect(() => {
-    localStorage.setItem("uploadHistory", JSON.stringify(uploadHistory));
-  }, [uploadHistory]);
 
   const languages = [
     { code: "es", name: "Spanish" },
@@ -216,7 +201,6 @@ export default function Home() {
   console.log("isLoading:", isLoading);
   console.log("pdfLoaded:", pdfLoaded);
   console.log("uploadHistory:", uploadHistory);
-  console.log("isPageReloaded:", isPageReloaded);
 
   return (
     <main className="flex flex-col min-h-screen bg-purple-100 font-poppins">
@@ -250,13 +234,12 @@ export default function Home() {
       {pdfFile ? (
         <div className="flex flex-1 h-[calc(100vh-120px)] relative">
           <div
-            className={`border-r bg-purple-50 shadow-md transition-all duration-300 flex flex-col ${
-              leftSidebarState === "hidden"
+            className={`border-r bg-purple-50 shadow-md transition-all duration-300 flex flex-col ${leftSidebarState === "hidden"
                 ? "w-0 overflow-hidden"
                 : leftSidebarState === "collapsed"
-                ? "w-16"
-                : "w-72"
-            }`}
+                  ? "w-16"
+                  : "w-72"
+              }`}
           >
             <div className="p-4 border-b flex items-center justify-between bg-purple-100">
               {leftSidebarState === "expanded" && (
@@ -298,11 +281,10 @@ export default function Home() {
                         toggleLeftSidebar();
                         setCurrentPage(index);
                       }}
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${
-                        currentPage === index
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${currentPage === index
                           ? "bg-pink-200 text-pink-800 border border-pink-400 shadow-md"
                           : "bg-purple-100 text-pink-700 hover:bg-purple-200 shadow-sm"
-                      }`}
+                        }`}
                     >
                       {page.pageNumber}
                     </button>
@@ -325,9 +307,8 @@ export default function Home() {
                 aria-label={leftSidebarState === "expanded" ? "Collapse sidebar" : "Expand sidebar"}
               >
                 <PanelLeft
-                  className={`h-6 w-6 text-pink-700 transition-transform ${
-                    leftSidebarState === "expanded" ? "rotate-180" : ""
-                  }`}
+                  className={`h-6 w-6 text-pink-700 transition-transform ${leftSidebarState === "expanded" ? "rotate-180" : ""
+                    }`}
                 />
               </button>
             </div>
@@ -360,13 +341,13 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="w-1/2 flex flex-col min-h-0 ">
+            <div className="w-1/2 flex flex-col min-h-0">
               <div
                 className="p-4 bg-purple-100 border-b sticky z-20 shadow-sm"
                 style={{ top: "72px" }}
               >
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-bold text-pink-700">Translated Slides</h2>
+                <h2 className="text-2xl font-bold text-pink-700">Translated Slides</h2>
+                <div className="flex items-center gap-3 mt-2">
                   <label htmlFor="language" className="text-base font-medium text-pink-800">
                     Translate to:
                   </label>
@@ -436,11 +417,9 @@ export default function Home() {
               </div>
             </div>
           </div>
-          {isPageReloaded && <UploadHistory uploadHistory={uploadHistory} />}
+          <UploadHistory uploadHistory={uploadHistory} />
         </div>
       )}
-
-      {pdfFile && isPageReloaded && <UploadHistory uploadHistory={uploadHistory} />}
 
       {pdfFile && (
         <div className="fixed bottom-6 right-6 flex gap-3 md:hidden">
