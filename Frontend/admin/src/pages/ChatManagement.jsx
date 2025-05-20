@@ -15,8 +15,12 @@ function ChatManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [menuOpenIndex, setMenuOpenIndex] = useState(null);
 
-  const [loggedInUser, setLoggedInUser] = useState(null);
-  const [loadingPage, setLoadingPage] = useState(true);
+  const [loggedInUser, setLoggedInUser] = useState(() => {
+    const storedUser = localStorage.getItem('currentUser');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  const [loadingPage, setLoadingPage] = useState(!loggedInUser);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,6 +29,7 @@ function ChatManagement() {
         const response = await axios.get(`${API_BASE_URL}/auth/user`, { withCredentials: true });
         if (response.status === 200) {
           setLoggedInUser(response.data);
+          localStorage.setItem('currentUser', JSON.stringify(response.data)); 
         } else {
           setLoggedInUser(null);
         }
@@ -32,19 +37,24 @@ function ChatManagement() {
         console.error('Lỗi khi lấy thông tin user đăng nhập trong ChatManagement:', error.response?.status, error.response?.data);
         setLoggedInUser(null);
         if (error.response && error.response.status === 401) {
-           console.warn('Phiên hết hạn khi lấy thông tin user trong ChatManagement. Chuyển hướng về trang đăng nhập.');
-           navigate('/admin-login');
+          console.warn('Phiên hết hạn khi lấy thông tin user trong ChatManagement. Chuyển hướng về trang đăng nhập.');
+          localStorage.removeItem('currentUser'); 
+          navigate('/admin-login', { replace: true });
         }
       } finally {
-          setLoadingPage(false);
+        setLoadingPage(false);
       }
     };
-    fetchLoggedInUser();
-  }, [navigate]);
+
+    if (!loggedInUser) {
+      fetchLoggedInUser();
+    } else {
+      setLoadingPage(false);
+    }
+  }, [loggedInUser, navigate]);
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
-    console.log('Đã chọn người dùng:', user);
   };
 
   const handleBackToList = () => {
@@ -56,8 +66,7 @@ function ChatManagement() {
         await axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true });
         setLoggedInUser(null);
         localStorage.removeItem('currentUser');
-
-        navigate('/admin-login');
+        navigate('/admin-login', { replace: true });
     } catch (error) {
         console.error('Lỗi khi đăng xuất từ ChatManagement:', error);
         alert('Đăng xuất thất bại.');
@@ -65,7 +74,7 @@ function ChatManagement() {
   };
 
   if (loadingPage) {
-      return <div className="flex min-h-screen w-full items-center justify-center">Đang tải trang quản lý chat...</div>;
+    return <div className="flex min-h-screen w-full items-center justify-center">Đang tải trang quản lý chat...</div>;
   }
 
   return (

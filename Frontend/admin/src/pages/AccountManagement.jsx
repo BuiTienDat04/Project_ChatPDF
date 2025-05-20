@@ -1,109 +1,129 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import Sidebar from '../components/sidebar'; // <-- Import Sidebar
+import Sidebar from '../components/sidebar';
 import { API_BASE_URL } from '../api/api';
-import { useNavigate } from 'react-router-dom'; // <-- Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 const AccountManagement = () => {
-  // State để lưu danh sách tất cả user
+  const navigate = useNavigate();
+
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true); // Loading state cho danh sách user
+  const [error, setError] = useState(null);
 
-  // *** THÊM STATE VÀ LOGIC ĐỂ LẤY USER ĐANG ĐĂNG NHẬP CHO SIDEBAR ***
-  const [loggedInUser, setLoggedInUser] = useState(null); // State để lưu user đang đăng nhập
-  const [loadingUser, setLoadingUser] = useState(true); // Loading state cho user đang đăng nhập
-  const navigate = useNavigate(); // Khởi tạo useNavigate
+  const [loggedInUser, setLoggedInUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem('currentUser');
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (e) {
+      console.error("Lỗi khi đọc currentUser từ localStorage:", e);
+      return null;
+    }
+  });
 
-  // Effect để lấy thông tin user đăng nhập khi component mount
-  useEffect(() => {
-    const fetchLoggedInUser = async () => {
+  const [loadingPage, setLoadingPage] = useState(!loggedInUser || !loggedInUser._id);
+
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true });
+      setLoggedInUser(null);
+      localStorage.removeItem('currentUser');
+      navigate('/admin-login', { replace: true });
+    } catch (logoutError) {
+      console.error('Lỗi khi đăng xuất từ AccountManagement:', logoutError);
+      alert('Đăng xuất thất bại.');
+    }
+  }, [navigate]); 
+
+
+  const fetchPageData = useCallback(async () => {
+    if (!loggedInUser || !loggedInUser._id) {
+       setLoadingPage(true);
+    }
+    setError(null);
+
+    let currentFetchedUser = loggedInUser;
+
+    if (!currentFetchedUser || !currentFetchedUser._id) {
       try {
-        // Cần có API ở backend để lấy user đang đăng nhập (ví dụ: /auth/user hoặc /auth/me)
-        // API này cần được bảo vệ bằng ensureAuthenticated và trả về req.user
-        const response = await axios.get(`${API_BASE_URL}/auth/user`, { withCredentials: true });
-        if (response.status === 200) {
-          setLoggedInUser(response.data); // Lưu user object vào state
+        const userResponse = await axios.get(`${API_BASE_URL}/auth/user`, { withCredentials: true });
+        if (userResponse.status === 200) {
+          currentFetchedUser = userResponse.data;
+          setLoggedInUser(currentFetchedUser);
+          localStorage.setItem('currentUser', JSON.stringify(currentFetchedUser));
         } else {
-          // Xử lý nếu API không trả về user (vd: chưa đăng nhập)
+          currentFetchedUser = null;
           setLoggedInUser(null);
+          localStorage.removeItem('currentUser');
+          navigate('/admin-login', { replace: true });
+          setLoadingPage(false);
+          return;
         }
-      } catch (error) {
-        console.error('Lỗi khi lấy thông tin user đăng nhập:', error);
+      } catch (userError) {
+        console.error('Lỗi khi lấy thông tin user đăng nhập:', userError.response?.status, userError.response?.data);
+        currentFetchedUser = null;
         setLoggedInUser(null);
-        // Xử lý lỗi: nếu lỗi là 401, chuyển hướng về trang login
-        if (error.response && error.response.status === 401) {
-          console.warn('Phiên hết hạn khi lấy thông tin user đăng nhập. Chuyển hướng về trang đăng nhập.');
-          navigate('/admin-login');
+        localStorage.removeItem('currentUser');
+        if (userError.response?.status === 401) {
+          console.warn('Phiên hết hạn. Chuyển hướng về trang đăng nhập.');
+          navigate('/admin-login', { replace: true });
+        } else {
+          setError('Không thể tải thông tin người dùng.');
         }
-      } finally {
-        setLoadingUser(false); // Đặt loading user = false sau khi fetch xong
+        setLoadingPage(false);
+        return;
       }
-    };
-    fetchLoggedInUser();
-  }, [navigate]); // Thêm navigate vào dependency array
+    }
 
-  // Effect gốc để Fetch users (danh sách tất cả user) từ API
+    if (!currentFetchedUser || !currentFetchedUser._id) {
+        setLoadingPage(false); 
+        return; 
+    }
+
+    try {
+      const usersResponse = await axios.get(`${API_BASE_URL}/api/users`, { withCredentials: true });
+      setUsers(usersResponse.data);
+    } catch (usersError) {
+      console.error('Lỗi khi tải danh sách người dùng:', usersError.response?.status, usersError.response?.data);
+      if (usersError.response?.status === 401) {
+        console.warn('Phiên hết hạn khi tải danh sách người dùng. Chuyển hướng về trang đăng nhập.');
+        localStorage.removeItem('currentUser');
+        navigate('/admin-login', { replace: true });
+      } else {
+        setError('Không thể tải danh sách người dùng.');
+      }
+    } finally {
+      setLoadingPage(false);
+    }
+  }, [loggedInUser, navigate]); 
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        // Với withCredentials = true đã đặt cho axios, cookie sẽ được gửi kèm
-        const response = await axios.get(`${API_BASE_URL}/api/users`);
-        setUsers(response.data);
-      } catch (error) {
-        console.error('Lỗi khi tải danh sách người dùng:', error);
-        // Xử lý lỗi 401 cho danh sách user: chuyển hướng về login
-        if (error.response && error.response.status === 401) {
-          console.warn('Phiên hết hạn khi tải danh sách người dùng. Chuyển hướng về trang đăng nhập.');
-          navigate('/admin-login');
-        }
-      } finally {
-        // Đặt loading danh sách user = false sau khi fetch xong
-        setLoading(false);
-      }
-    };
+    fetchPageData();
 
-    // Gọi hàm fetch danh sách users
-    fetchUsers();
+    const intervalId = setInterval(fetchPageData, 5000);
 
-    // ✅ Khai báo và gán interval
-    const intervalId = setInterval(fetchUsers, 5000);
-
-    // ✅ Dọn dẹp interval khi component unmount
     return () => clearInterval(intervalId);
-
-  }, [navigate]); // Thêm navigate vào dependency array
-
+  }, [fetchPageData]);
 
   const filteredUsers = users.filter(user =>
     user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Hiển thị loading hoặc lỗi nếu cần (có thể kết hợp loadingUser và loading)
-  // Ví dụ: chỉ hiển thị nội dung khi cả 2 đều không loading
-  if (loadingUser || loading) {
-    // Bạn có thể hiển thị loading spinner hoặc thông báo phù hợp
-    return <div className="flex min-h-screen w-full items-center justify-center">Đang tải dữ liệu quản lý tài khoản...</div>;
+  if (loadingPage) {
+    return <div className="flex min-h-screen w-full items-center justify-center text-lg text-gray-700">Đang tải dữ liệu quản lý tài khoản...</div>;
   }
 
-  // Có thể thêm kiểm tra nếu user đăng nhập là null sau khi loadingUser=false
-  // if (!loggedInUser) {
-  //     // Điều này sẽ được xử lý bởi navigate('/admin-login') trong useEffect 401
-  //     // Nhưng nếu có trường hợp khác user=null mà không phải 401, có thể xử lý ở đây
-  // }
-
+  if (error) {
+    return <div className="flex min-h-screen w-full items-center justify-center text-lg text-red-500">{error}</div>;
+  }
 
   return (
-    <div className="flex">
-      {/* *** SỬA Ở ĐÂY: TRUYỀN state loggedInUser VÀO PROP 'user' *** */}
-      {/* Sidebar giờ đây sẽ nhận được user object đầy đủ có _id để fetch chi tiết */}
-      {/* Bạn cần xử lý hàm onLogout ở cấp độ này hoặc cao hơn nếu Sidebar có nút Logout */}
-      {/* Đảm bảo loggedInUser có giá trị trước khi truyền nếu Sidebar không xử lý user=null tốt */}
-      {/* Hoặc Sidebar đã được sửa để xử lý user=null/undefined */}
-      <Sidebar user={loggedInUser} onLogout={() => { console.log("Logout initiated from AccountManagement"); /* Logic logout */ }} />
+    <div className="flex min-h-screen w-full bg-white text-black font-sans">
+      <Sidebar user={loggedInUser} onLogout={handleLogout} />
 
-      <div className="flex-1 p-6 bg-gray-50 min-h-screen">
+      <div className="flex-1 p-6 bg-gray-50">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">Quản lý tài khoản</h1>
 
@@ -123,10 +143,6 @@ const AccountManagement = () => {
           </div>
         </div>
 
-        {/* Giữ nguyên phần hiển thị danh sách users, nó phụ thuộc vào state 'users' */}
-        {/* {loading ? ( // Loading cho danh sách users đã được xử lý ở trên cùng
-          // <p className="text-gray-500">Đang tải dữ liệu...</p>
-        ) : ( */}
         <div className="space-y-4">
           {filteredUsers.map((user, index) => (
             <div
@@ -158,7 +174,6 @@ const AccountManagement = () => {
             <p className="text-gray-500">Không tìm thấy người dùng phù hợp.</p>
           )}
         </div>
-        {/* )} */} {/* Đóng ngoặc loading ban đầu */}
       </div>
     </div>
   );
