@@ -36,7 +36,7 @@ function UploadHistory({ uploadHistory }) {
               </div>
               <Button
                 className="bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 text-sm font-semibold transition shadow-md"
-                onClick={() => alert(`Viewing ${file.name}`)} // Thay bằng logic xem/tải file
+                onClick={() => alert(`Viewing ${file.name}`)}
               >
                 View
               </Button>
@@ -58,21 +58,36 @@ export default function Home() {
   const [pdfLoaded, setPdfLoaded] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(true);
   const [uploadHistory, setUploadHistory] = useState([]);
+  const [isPageReloaded, setIsPageReloaded] = useState(false); // State để kiểm tra load lại trang
   const originalContainerRef = useRef(null);
   const translatedContainerRef = useRef(null);
 
   // Sidebar state: "collapsed", "expanded", or "hidden"
   const [leftSidebarState, setLeftSidebarState] = useState("expanded");
 
-  // Load PDF.js script
+  // Load PDF.js script và kiểm tra load lại trang
   useEffect(() => {
+    // Kiểm tra nếu trang được load lại
+    setIsPageReloaded(true);
+
+    // Load dữ liệu từ localStorage khi trang được load
+    const savedHistory = localStorage.getItem("uploadHistory");
+    if (savedHistory) {
+      setUploadHistory(JSON.parse(savedHistory));
+    }
+
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
     script.async = true;
     script.onload = () => {
+      console.log("PDF.js loaded successfully");
       window.pdfjsLib.GlobalWorkerOptions.workerSrc =
         "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
       setPdfLoaded(true);
+    };
+    script.onerror = () => {
+      console.error("Failed to load PDF.js");
+      alert("Failed to load PDF.js. Please check your network or try again later.");
     };
     document.body.appendChild(script);
 
@@ -80,6 +95,11 @@ export default function Home() {
       document.body.removeChild(script);
     };
   }, []);
+
+  // Lưu uploadHistory vào localStorage mỗi khi nó thay đổi
+  useEffect(() => {
+    localStorage.setItem("uploadHistory", JSON.stringify(uploadHistory));
+  }, [uploadHistory]);
 
   const languages = [
     { code: "es", name: "Spanish" },
@@ -107,6 +127,7 @@ export default function Home() {
 
   // Handle file upload and save to history
   const handleFileUpload = (fileInfo) => {
+    console.log("Adding to upload history:", fileInfo);
     setUploadHistory((prev) => [fileInfo, ...prev]);
   };
 
@@ -190,8 +211,22 @@ export default function Home() {
     }
   };
 
+  // Log trạng thái để debug
+  console.log("pdfPages:", pdfPages);
+  console.log("isLoading:", isLoading);
+  console.log("pdfLoaded:", pdfLoaded);
+  console.log("uploadHistory:", uploadHistory);
+  console.log("isPageReloaded:", isPageReloaded);
+
   return (
     <main className="flex flex-col min-h-screen bg-purple-100 font-poppins">
+      <style jsx>{`
+        button:disabled {
+          opacity: 0.5;
+          display: block !important;
+          visibility: visible !important;
+        }
+      `}</style>
       <div className="p-6 border-b bg-purple-100 shadow-lg">
         <div className="flex flex-wrap items-center justify-between gap-6">
           <h1 className="text-4xl font-extrabold text-pink-700 tracking-tight">
@@ -208,32 +243,6 @@ export default function Home() {
               onFileUpload={handleFileUpload}
               className="bg-purple-100 border-2 border-pink-300 rounded-lg p-2 hover:bg-purple-200 transition"
             />
-
-            <div className="flex items-center gap-3">
-              <label htmlFor="language" className="text-base font-medium text-pink-800">
-                Translate to:
-              </label>
-              <select
-                id="language"
-                value={targetLanguage}
-                onChange={(e) => setTargetLanguage(e.target.value)}
-                className="border border-pink-300 rounded-lg px-3 py-2 text-base bg-purple-100 text-pink-900 focus:ring-2 focus:ring-pink-400 transition shadow-sm"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </option>
-                ))}
-              </select>
-
-              <Button
-                onClick={analyzeAndTranslateContent}
-                disabled={pdfPages.length === 0 || isLoading}
-                className="bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-6 py-2 text-base font-semibold transition shadow-md hover:shadow-lg"
-              >
-                Translate
-              </Button>
-            </div>
           </div>
         </div>
       </div>
@@ -241,12 +250,13 @@ export default function Home() {
       {pdfFile ? (
         <div className="flex flex-1 h-[calc(100vh-120px)] relative">
           <div
-            className={`border-r bg-purple-50 shadow-md transition-all duration-300 flex flex-col ${leftSidebarState === "hidden"
-              ? "w-0 overflow-hidden"
-              : leftSidebarState === "collapsed"
+            className={`border-r bg-purple-50 shadow-md transition-all duration-300 flex flex-col ${
+              leftSidebarState === "hidden"
+                ? "w-0 overflow-hidden"
+                : leftSidebarState === "collapsed"
                 ? "w-16"
                 : "w-72"
-              }`}
+            }`}
           >
             <div className="p-4 border-b flex items-center justify-between bg-purple-100">
               {leftSidebarState === "expanded" && (
@@ -288,10 +298,11 @@ export default function Home() {
                         toggleLeftSidebar();
                         setCurrentPage(index);
                       }}
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${currentPage === index
-                        ? "bg-pink-200 text-pink-800 border border-pink-400 shadow-md"
-                        : "bg-purple-100 text-pink-700 hover:bg-purple-200 shadow-sm"
-                        }`}
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${
+                        currentPage === index
+                          ? "bg-pink-200 text-pink-800 border border-pink-400 shadow-md"
+                          : "bg-purple-100 text-pink-700 hover:bg-purple-200 shadow-sm"
+                      }`}
                     >
                       {page.pageNumber}
                     </button>
@@ -314,8 +325,9 @@ export default function Home() {
                 aria-label={leftSidebarState === "expanded" ? "Collapse sidebar" : "Expand sidebar"}
               >
                 <PanelLeft
-                  className={`h-6 w-6 text-pink-700 transition-transform ${leftSidebarState === "expanded" ? "rotate-180" : ""
-                    }`}
+                  className={`h-6 w-6 text-pink-700 transition-transform ${
+                    leftSidebarState === "expanded" ? "rotate-180" : ""
+                  }`}
                 />
               </button>
             </div>
@@ -331,11 +343,11 @@ export default function Home() {
             </button>
           )}
 
-          <div className="flex-1 flex flex-col md:flex-row min-h-0">
-            <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex flex-row min-h-0">
+            <div className="w-1/2 flex flex-col min-h-0 border-r">
               <div
                 className="p-4 bg-purple-100 border-b sticky z-20 shadow-sm"
-                style={{ top: '72px' }}
+                style={{ top: "72px" }}
               >
                 <h2 className="text-2xl font-bold text-pink-700">Original Slides</h2>
               </div>
@@ -348,12 +360,36 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l min-h-0">
+            <div className="w-1/2 flex flex-col min-h-0 ">
               <div
                 className="p-4 bg-purple-100 border-b sticky z-20 shadow-sm"
-                style={{ top: '72px' }}
+                style={{ top: "72px" }}
               >
-                <h2 className="text-2xl font-bold text-pink-700">Translated Slides</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold text-pink-700">Translated Slides</h2>
+                  <label htmlFor="language" className="text-base font-medium text-pink-800">
+                    Translate to:
+                  </label>
+                  <select
+                    id="language"
+                    value={targetLanguage}
+                    onChange={(e) => setTargetLanguage(e.target.value)}
+                    className="border border-pink-300 rounded-lg px-3 py-2 text-base bg-purple-100 text-pink-900 focus:ring-2 focus:ring-pink-400 transition shadow-sm"
+                  >
+                    {languages.map((lang) => (
+                      <option key={lang.code} value={lang.code}>
+                        {lang.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    onClick={analyzeAndTranslateContent}
+                    disabled={pdfPages.length === 0 || isLoading}
+                    className="bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-6 py-2 text-base font-semibold transition shadow-md hover:shadow-lg"
+                  >
+                    Translate
+                  </Button>
+                </div>
               </div>
               <div
                 id="translated-slide-container"
@@ -364,7 +400,7 @@ export default function Home() {
                   translatedPages={translatedPages}
                   currentPage={currentPage}
                   isLoading={isLoading}
-                  targetLanguage={languages.find((l) => l.code === targetLanguage)?.name || ''}
+                  targetLanguage={languages.find((l) => l.code === targetLanguage)?.name || ""}
                   originalPages={pdfPages}
                 />
               </div>
@@ -400,10 +436,11 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <UploadHistory uploadHistory={uploadHistory} />
+          {isPageReloaded && <UploadHistory uploadHistory={uploadHistory} />}
         </div>
-
       )}
+
+      {pdfFile && isPageReloaded && <UploadHistory uploadHistory={uploadHistory} />}
 
       {pdfFile && (
         <div className="fixed bottom-6 right-6 flex gap-3 md:hidden">
