@@ -1,45 +1,43 @@
 const mongoose = require('mongoose');
 
-// Định nghĩa Schema Gói đăng ký
 const subscribeSchema = new mongoose.Schema({
-    // Tham chiếu đến người dùng sở hữu mục lịch sử gói đăng ký này
+    
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Giả định bạn có một model tên là 'User'
+        ref: 'User', 
         required: true
     },
-    // Chi tiết gói đăng ký
+    
     packageName: {
         type: String,
         required: true,
-        enum: ['1 Month', '3 Months', '6 Months', '1 Year'] // Các loại gói được phép
+        enum: ['1 Month', '3 Months', '6 Months', '1 Year'] 
     },
     durationMonths: {
         type: Number,
         required: true,
-        enum: [1, 3, 6, 12] // Thời lượng tương ứng tính bằng tháng
+        enum: [1, 3, 6, 12] 
     },
     price: {
         type: Number,
         required: true,
-        min: 0 // Giá phải không âm
+        min: 0 
     },
-    // Thời gian đăng ký
+    
     startDate: {
         type: Date,
         required: true,
-        default: Date.now // Mặc định là ngày/giờ hiện tại khi tạo
+        default: Date.now 
     },
     endDate: {
         type: Date,
         required: true
     },
-    // Tùy chọn: Chi tiết giao dịch
+    
     transactionId: {
         type: String,
-        // Có thể dùng để liên kết với giao dịch cổng thanh toán
     },
-    // Tùy chọn: Trạng thái (ví dụ: 'active', 'expired', 'cancelled')
+
     status: {
         type: String,
         enum: ['active', 'expired', 'cancelled'],
@@ -47,10 +45,9 @@ const subscribeSchema = new mongoose.Schema({
     }
 
 }, {
-    timestamps: true // Tự động thêm các trường createdAt và updatedAt
+    timestamps: true 
 });
 
-// Tạo model từ schema
 const Subscription = mongoose.model('Subscription', subscribeSchema);
 
 module.exports = Subscription;
