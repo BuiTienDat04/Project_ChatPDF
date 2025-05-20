@@ -46,7 +46,7 @@ router.get(
         } else if (originalUrl === '/admin-login' && user.role === 'admin') {
           redirectPath = '/dashboard';
         } else {
-          redirectPath = originalUrl || '/home';
+          redirectPath = originalUrl;
         }
 
         if (!redirectPath || !redirectPath.startsWith('/')) {

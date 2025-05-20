@@ -5,72 +5,56 @@ import axios from 'axios';
 import { API_BASE_URL } from '../api/api';
 import { useNavigate } from 'react-router-dom'; // <-- Import useNavigate
 
-function Dashboard() { // <-- Sử dụng function component
-  // Sử dụng state để lưu thông tin user đăng nhập, bao gồm _id ban đầu
-  const [currentUser, setCurrentUser] = useState(
-    JSON.parse(localStorage.getItem('currentUser')) || { _id: null, name: 'Người dùng Quản trị' }
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate(); // <-- Khởi tạo useNavigate
+function Dashboard() {
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        // Gọi API để lấy thông tin user đang đăng nhập (cần backend có route /auth/user trả về req.user)
-        const response = await axios.get(`${API_BASE_URL}/auth/user`, { withCredentials: true });
-        console.log('User Info API response:', response.data); // Log rõ hơn
+    const [currentUser, setCurrentUser] = useState(() => {
+        const storedUser = localStorage.getItem('currentUser');
+        return storedUser ? JSON.parse(storedUser) : { _id: null, name: 'Người dùng Quản trị', email: 'guest@example.com' };
+    });
+    const [loading, setLoading] = useState(!currentUser._id);
+    const [error, setError] = useState(null);
 
-        // Cập nhật state user với dữ liệu đầy đủ từ API
-        setCurrentUser(response.data);
-        // Lưu user đầy đủ vào Local Storage (nếu cần, cẩn thận đồng bộ state và LS)
-        localStorage.setItem('currentUser', JSON.stringify(response.data));
+    useEffect(() => {
+        const fetchUserInfo = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/auth/user`, { withCredentials: true });
+                console.log('User Info API response:', response.data);
+                setCurrentUser(response.data);
+                localStorage.setItem('currentUser', JSON.stringify(response.data));
+                setLoading(false);
+            } catch (err) {
+                console.error('Lỗi khi lấy thông tin user đăng nhập API:', err.response?.status, err.response?.data);
+                setError('Không thể lấy thông tin người dùng. Kiểm tra backend hoặc trạng thái đăng nhập.');
+                setLoading(false);
 
-        // Phần lấy sessionId từ cookie JS không cần thiết nếu HttpOnly cookie được dùng
-        // và withCredentials=true đã được thiết lập. Có thể bỏ qua các dòng này.
-        // const sessionId = document.cookie.split('; ').find(row => row.startsWith('sessionId='));
-        // if (sessionId) {
-        //   localStorage.setItem('sessionId', sessionId.split('=')[1]);
-        // }
+                if (err.response?.status === 401) {
+                    console.warn('Phiên hết hạn. Chuyển hướng về trang đăng nhập.');
+                    localStorage.removeItem('currentUser');
+                    navigate('/admin-login', { replace: true });
+                }
+            }
+        };
 
-        setLoading(false);
-      } catch (err) {
-        console.error('Lỗi khi lấy thông tin user đăng nhập API:', err.response?.status, err.response?.data);
-        setError('Không thể lấy thông tin người dùng. Kiểm tra backend hoặc trạng thái đăng nhập.');
-        setLoading(false);
-
-        // Xử lý lỗi 401: Phiên hết hạn, cần đăng nhập lại
-        if (err.response?.status === 401) {
-          console.warn('Phiên hết hạn. Chuyển hướng về trang đăng nhập.');
-          localStorage.removeItem('currentUser'); // Xóa thông tin user cũ
-          localStorage.removeItem('sessionId'); // Xóa session ID cũ (nếu có lưu)
-          navigate('/admin-login'); // Chuyển hướng về trang đăng nhập bằng navigate
+        if (!currentUser._id) {
+            fetchUserInfo();
         } else {
-             // Xử lý các lỗi khác nếu cần
+            setLoading(false);
         }
-      }
+    }, [currentUser._id, navigate]);
+
+    const handleLogout = () => {
+        axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true })
+            .then(() => {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('sessionId');
+                navigate('/admin-login', { replace: true });
+            })
+            .catch(err => {
+                console.error('Lỗi khi đăng xuất:', err);
+                alert('Đăng xuất thất bại. Vui lòng thử lại.');
+            });
     };
-    fetchUserInfo();
-  }, [navigate]); // Thêm navigate vào dependency array để useEffect không báo warning
-
-  // Hàm xử lý logout (đã có sẵn, sử dụng axios và navigate)
-  const handleLogout = () => {
-    // Sử dụng POST cho logout request nếu backend mong đợi POST
-    axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true })
-      .then(() => {
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('sessionId'); // Xóa session ID cũ (nếu có lưu)
-        navigate('/admin-login'); // Chuyển hướng về trang đăng nhập sau logout
-      })
-      .catch(err => {
-          console.error('Lỗi khi đăng xuất:', err);
-           // Thông báo lỗi cho người dùng nếu logout thất bại ở backend
-          alert('Đăng xuất thất bại. Vui lòng thử lại.');
-      });
-  };
-
-  // --- Các phần code khác của Dashboard (stats, getSvgPathHistorical, recentUploads, v.v.) ---
-  // Giữ nguyên các hàm và dữ liệu này
 
   const stats = [
     {

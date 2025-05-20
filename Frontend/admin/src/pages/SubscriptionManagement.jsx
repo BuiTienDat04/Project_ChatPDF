@@ -1,266 +1,158 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/sidebar';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import axios from 'axios';
 import { API_BASE_URL } from '../api/api';
 import { useNavigate } from 'react-router-dom';
-import moment from 'moment';
 
-const SubscriptionManagement = () => {
-    const [allUsersWithStatus, setAllUsersWithStatus] = useState([]);
-    const [loadingInitialList, setLoadingInitialList] = useState(true);
-    const [errorInitialList, setErrorInitialList] = useState(null);
-
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [selectedUserSubscriptions, setSelectedUserSubscriptions] = useState([]);
-    const [loadingHistory, setLoadingHistory] = useState(false);
-    const [errorHistory, setErrorHistory] = useState(null);
-
-    const [loggedInUser, setLoggedInUser] = useState(null);
-    const [loadingUser, setLoadingUser] = useState(true);
+function SubscriptionManagement() {
     const navigate = useNavigate();
 
+    const [currentUser, setCurrentUser] = useState(() => {
+        const storedUser = localStorage.getItem('currentUser');
+        return storedUser ? JSON.parse(storedUser) : { _id: null, name: 'Người dùng Quản trị', email: 'guest@example.com' };
+    });
+
+    const [isLoadingPage, setIsLoadingPage] = useState(!currentUser._id);
+    const [pageError, setPageError] = useState(null);
+    const [subscriptions, setSubscriptions] = useState([]);
+
     useEffect(() => {
-        const fetchLoggedInUser = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/auth/user`, { withCredentials: true });
-                if (response.status === 200) {
-                    setLoggedInUser(response.data);
-                } else {
-                    setLoggedInUser(null);
-                }
-            } catch (error) {
-                console.error('Error fetching logged-in user:', error);
-                setLoggedInUser(null);
-                if (error.response && error.response.status === 401) {
-                    navigate('/admin-login');
-                }
-                setErrorInitialList(error.message || "Could not load admin user information.");
-            } finally {
-                setLoadingUser(false);
+        const fetchAllData = async () => {
+            if (!isLoadingPage && !currentUser._id) {
+                setIsLoadingPage(true);
             }
-        };
-        fetchLoggedInUser();
-    }, [navigate]);
+            setPageError(null);
 
-    useEffect(() => {
-        const fetchAllUsersWithStatus = async () => {
             try {
-                setLoadingInitialList(true);
-                setErrorInitialList(null);
+                let userToUse = currentUser;
 
-                const response = await axios.get(`${API_BASE_URL}/api/subscriptions/users-with-subscription-status`, { withCredentials: true });
-
-                if (response.status === 200) {
-                    setAllUsersWithStatus(response.data);
-                } else {
-                    setAllUsersWithStatus([]);
-                    setErrorInitialList(`Error loading users list: Status ${response.status}`);
+                if (!userToUse._id) {
+                    const userResponse = await axios.get(`${API_BASE_URL}/auth/user`, { withCredentials: true });
+                    console.log('User Info API response for SubscriptionManagement:', userResponse.data);
+                    setCurrentUser(userResponse.data);
+                    localStorage.setItem('currentUser', JSON.stringify(userResponse.data));
+                    userToUse = userResponse.data;
                 }
-            } catch (error) {
-                console.error('Error loading users list:', error);
-                setErrorInitialList(error.message || 'An error occurred while loading the user list.');
-                if (error.response && error.response.status === 401) {
-                    navigate('/admin-login');
+
+                if (userToUse._id) {
+                    const subscriptionsResponse = await axios.get(`${API_BASE_URL}/api/subscriptions/users-with-subscription-status`, { withCredentials: true });
+                    console.log('API response for users-with-subscription-status:', subscriptionsResponse.data);
+                    setSubscriptions(subscriptionsResponse.data);
+                }
+
+            } catch (err) {
+                console.error('Lỗi khi tải dữ liệu đăng ký người dùng:', err.response?.status, err.response?.data);
+                setPageError('Không thể tải danh sách đăng ký người dùng. Vui lòng thử lại.');
+                if (err.response?.status === 401) {
+                    console.warn('Phiên hết hạn. Chuyển hướng về trang đăng nhập.');
+                    localStorage.removeItem('currentUser');
+                    navigate('/admin-login', { replace: true });
                 }
             } finally {
-                setLoadingInitialList(false);
+                setIsLoadingPage(false);
             }
         };
 
-        fetchAllUsersWithStatus();
-
-    }, [navigate, loggedInUser, loadingUser]);
-
-    useEffect(() => {
-        if (!selectedUser) {
-            setSelectedUserSubscriptions([]);
-            setErrorHistory(null);
-            return;
+        if (isLoadingPage || (currentUser._id && subscriptions.length === 0) || pageError) {
+             fetchAllData();
         }
 
-        const fetchSelectedUserHistory = async () => {
-            try {
-                setLoadingHistory(true);
-                setErrorHistory(null);
+    }, [currentUser._id, navigate, subscriptions.length, pageError]);
 
-                const response = await axios.get(`${API_BASE_URL}/api/subscriptions/${selectedUser._id}/subscriptions`, { withCredentials: true });
-
-                if (response.status === 200) {
-                    setSelectedUserSubscriptions(response.data);
-                } else {
-                    setSelectedUserSubscriptions([]);
-                    setErrorHistory(`Error loading history: Status ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error loading detailed subscription history:', error);
-                setErrorHistory(error.message || 'An error occurred while loading the history.');
-                if (error.response && error.response.status === 401) {
-                    navigate('/admin-login');
-                }
-            } finally {
-                setLoadingHistory(false);
-            }
-        };
-
-        fetchSelectedUserHistory();
-    }, [selectedUser, navigate]);
-
-    const handleUserClick = (user) => {
-        setSelectedUser(user);
+    const handleLogout = () => {
+        axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true })
+            .then(() => {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('sessionId');
+                navigate('/admin-login', { replace: true });
+            })
+            .catch(err => {
+                console.error('Lỗi khi đăng xuất:', err);
+                alert('Đăng xuất thất bại. Vui lòng thử lại.');
+            });
     };
 
-    const handleBackToList = () => {
-        setSelectedUser(null);
-        setSelectedUserSubscriptions([]);
-        setErrorHistory(null);
-    };
-
-    if (loadingUser || loadingInitialList) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-500 text-lg">
-                Loading subscription management data...
-            </div>
-        );
+    if (isLoadingPage) {
+        return <div className="flex min-h-screen w-full items-center justify-center">Đang tải Quản lý Đăng ký...</div>;
     }
 
-    if (errorInitialList) {
-        return (
-            <div className="flex min-h-screen bg-gray-50">
-                <Sidebar user={loggedInUser} onLogout={() => { console.log("Logout initiated from SubscriptionManagement"); }} />
-                <div className="flex-1 p-6 bg-gray-100">
-                    <h1 className="text-2xl font-semibold text-gray-800 mb-6">Quản lý Gói đăng ký</h1>
-                    <div className="flex flex-col items-center justify-center min-h-[50vh] text-red-500 text-lg bg-gray-50 rounded-lg p-4">
-                        <p>Error: {errorInitialList}</p>
-                    </div>
-                </div>
-            </div>
-        );
+    if (pageError) {
+        return <div className="flex min-h-screen w-full items-center justify-center text-red-500">{pageError}</div>;
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            <Sidebar user={loggedInUser} onLogout={() => { console.log("Logout initiated from SubscriptionManagement"); }} />
-            <div className="flex-1 p-6 md:p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">Quản lý Gói đăng ký</h1>
-                    {selectedUser && (
-                        <button
-                            onClick={handleBackToList}
-                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:text-gray-800 transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                        >
-                            ← Quay lại danh sách người dùng
-                        </button>
-                    )}
-                </div>
-
-                {!selectedUser ? (
-                    <div className="space-y-4 ">
-                        {allUsersWithStatus.length === 0 ? (
-                            <p className="text-center text-gray-400 text-base py-8 bg-gray-100 rounded-lg">No users found or no package data.</p>
-                        ) : (
-                            allUsersWithStatus.map(user => (
-                                <div
-                                    key={user._id}
-                                    className="bg-gray-200 p-4 md:p-5 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-300 hover:bg-gray-100 "
-                                    onClick={() => handleUserClick(user)}
-                                >
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-700">
-
-                                        <div className="font-medium text-gray-800">
-                                            Người dùng: <span className="font-normal">{user.fullName || user.email || user._id}</span>
-                                        </div>
-
-                                        <div>
-                                            <span className="font-medium text-gray-800">Trạng thái:</span>{' '}
-                                            {user.currentSubscription ? (
-                                                <span className="font-semibold text-green-600">{user.currentSubscription.packageName}</span>
-                                            ) : (
-                                                <span className="font-semibold text-red-500">Hết hạn</span>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                             <span className="font-medium text-gray-800">Ngày bắt đầu:</span>{' '}
-                                             {user.currentSubscription ? (
-                                                  <span className="font-normal">{moment(user.currentSubscription.startDate).format('DD/MM/YYYY')}</span>
-                                             ) : (
-                                                  <span className="text-gray-500 font-normal">-</span>
-                                             )}
-                                        </div>
-
-                                        <div>
-                                             <span className="font-medium text-gray-800">Ngày hết hạn:</span>{' '}
-                                             {user.currentSubscription ? (
-                                                  <span className="font-normal">{moment(user.currentSubscription.endDate).format('DD/MM/YYYY')}</span>
-                                             ) : (
-                                                  <span className="text-gray-500 font-normal">-</span>
-                                             )}
-                                        </div>
-
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                ) : (
-                    <div>
-                        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">
-                            Lịch sử Gói của: {selectedUser.fullName || selectedUser.email || selectedUser._id}
-                        </h2>
-
-                        {loadingHistory ? (
-                            <div className="flex items-center justify-center text-gray-500 text-base py-8 bg-gray-100 rounded-lg">
-                                Loading subscription history...
-                            </div>
-                        ) : errorHistory ? (
-                            <p className="text-red-500 text-base text-center py-8 bg-gray-100 rounded-lg">Error loading history: {errorHistory}</p>
-                        ) : selectedUserSubscriptions.length === 0 ? (
-                            <p className="text-gray-400 text-base text-center py-8 bg-gray-100 rounded-lg">
-                                This user has no subscription history.
-                            </p>
-                        ) : (
-                            <div className="space-y-4">
-                                {selectedUserSubscriptions.map((sub, index) => (
-                                    <div
-                                        key={sub._id || index}
-                                        className="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm transition-all border border-gray-200 hover:shadow-md hover:bg-gray-100"
+        <div className="flex min-h-screen w-full bg-white text-black font-sans">
+            <Sidebar user={currentUser} onLogout={handleLogout} />
+            <main className="flex-grow overflow-y-auto p-6 bg-transparent">
+                <div className="bg-gray-300 p-8 rounded-lg shadow-md">
+                    <h2 className="text-2xl font-semibold mb-8 text-black border-b border-gray-400 pb-1">
+                        Quản lý Đăng ký Người dùng
+                    </h2>
+                    <div className="overflow-x-auto bg-white p-6 rounded-lg shadow-md">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Tên người dùng
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Email
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Trạng thái Đăng ký
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Gói Đăng ký
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Ngày bắt đầu
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Ngày hết hạn
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {subscriptions.map((user) => (
+                                    <tr
+                                        key={user._id}
+                                        className="hover:bg-gray-200 transition duration-150 ease-in-out"
                                     >
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                                            <div>
-                                                <span className="font-medium text-gray-800">Gói:</span> {sub.packageName} ({sub.durationMonths} tháng)
-                                            </div>
-                                            <div>
-                                                <span className="font-medium text-gray-800">Giá:</span> {sub.price.toLocaleString('vi-VN')} VNĐ
-                                            </div>
-                                            <div>
-                                                <span className="font-medium text-gray-800">Ngày bắt đầu:</span>{' '}
-                                                {moment(sub.startDate).format('DD/MM/YYYY HH:mm')}
-                                            </div>
-                                            <div>
-                                                <span className="font-medium text-gray-800">Ngày kết thúc:</span>{' '}
-                                                {moment(sub.endDate).format('DD/MM/YYYY HH:mm')}
-                                            </div>
-                                            <div>
-                                                <span className="font-medium text-gray-800">Trạng thái:</span>{' '}
-                                                <span className={`font-semibold ${sub.status === 'active' ? 'text-green-600' : 'text-red-500'}`}>
-                                                    {sub.status === 'active' ? 'Đang hoạt động' : 'Hết hạn'}
-                                                </span>
-                                            </div>
-                                            {sub.transactionId && (
-                                                <div>
-                                                    <span className="font-medium text-gray-800">Mã giao dịch:</span> {sub.transactionId}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {user.fullName}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {user.email}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                user.currentSubscription ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                            }`}>
+                                                {user.currentSubscription ? 'Active' : 'No Active Subscription'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {user.currentSubscription ? user.currentSubscription.packageName : 'N/A'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {user.currentSubscription ? new Date(user.currentSubscription.startDate).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {user.currentSubscription ? new Date(user.currentSubscription.endDate).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                    </tr>
                                 ))}
-                            </div>
+                            </tbody>
+                        </table>
+                        {subscriptions.length === 0 && !isLoadingPage && (
+                            <p className="text-center text-gray-600 py-4">Không có dữ liệu đăng ký nào.</p>
                         )}
                     </div>
-                )}
-            </div>
+                </div>
+            </main>
         </div>
     );
-};
+}
 
 export default SubscriptionManagement;
