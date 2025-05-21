@@ -42,18 +42,17 @@ router.get(
         let redirectPath;
 
         if (originalUrl === '/home') {
-          redirectPath = '/chatpdf';
+          redirectPath = '/chatpdf?loggedIn=true';
         } else if (originalUrl === '/admin-login' && user.role === 'admin') {
-          redirectPath = '/dashboard';
+          redirectPath = '/dashboard?loggedIn=true';
         } else {
-          redirectPath = originalUrl;
+          redirectPath = originalUrl ? `${originalUrl}?loggedIn=true` : '/home?loggedIn=true';
         }
 
         if (!redirectPath || !redirectPath.startsWith('/')) {
-          redirectPath = '/home' + (redirectPath || '');
+          redirectPath = `/home?loggedIn=true`;
         }
 
-        // Tùy theo vai trò, chọn URL đúng
         let baseUrl = process.env.FRONTEND_URL;
         if (originalUrl === '/admin-login' && user.role === 'admin') {
           baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
@@ -66,8 +65,22 @@ router.get(
 );
 
 router.get('/user', ensureAuthenticated, (req, res) => {
-  console.log('User in /auth/user:', req.user, req.session); // Debug
-  res.json(req.user || req.session.user);
+  console.log('User in /user:', req.user, req.session); // Sửa comment
+  if (req.user) {
+    res.json({
+      id: req.user.id,
+      _id: req.user._id || req.user.id,
+      name: req.user.fullName || req.user.displayName,
+      email: req.user.email || req.user.emails?.[0]?.value,
+      avatar: req.user.picture || req.user.photos?.[0]?.value,
+      role: req.user.role || 'user',
+      userId: req.user.id || req.user.userId,
+      token: req.user.token || '',
+      statusOnline: req.user.statusOnline || false,
+    });
+  } else {
+    res.status(401).json({ error: 'Không có thông tin người dùng' });
+  }
 });
 
 // API Logout
