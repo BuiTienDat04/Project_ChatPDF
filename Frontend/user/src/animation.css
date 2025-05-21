@@ -1,0 +1,71 @@
+@keyframes wave-flow {
+  0% {
+    background-position: 0% 50%;
+    background-image: linear-gradient(
+      45deg,
+      rgba(255, 224, 242, 0.7), /* Hồng nhạt */
+      rgba(230, 200, 236, 0.9), /* Tím nhạt */
+      rgba(255, 224, 242, 0.7) /* Hồng nhạt */
+    );
+  }
+  50% {
+    background-position: 100% 50%;
+    background-image: linear-gradient(
+      45deg,
+      rgba(230, 200, 236, 0.9), /* Tím nhạt */
+      rgba(255, 224, 242, 0.7), /* Hồng nhạt */
+      rgba(230, 200, 236, 0.9) /* Tím nhạt */
+    );
+  }
+  100% {
+    background-position: 0% 50%;
+    background-image: linear-gradient(
+      45deg,
+      rgba(255, 224, 242, 0.7), /* Hồng nhạt */
+      rgba(230, 200, 236, 0.9), /* Tím nhạt */
+      rgba(255, 224, 242, 0.7) /* Hồng nhạt */
+    );
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.15; }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-wave-flow {
+  animation: wave-flow 10s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 8s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 10s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-[cubic-bezier(0.33,1,0.68,1)] forwards;
+}
+
+button:hover,
+div:hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
