@@ -157,7 +157,7 @@ const Navigation = ({ user, onLogout }) => {
             >
               <div className="relative">
                 <img
-                  src={currentUser?.picture || 'https://via.placeholder.com/40'}
+                  src={currentUser?.picture}
                   alt="User Avatar"
                   className="w-11 h-11 rounded-full cursor-pointer border-2 border-pink-200/70 hover:border-purple-400/70 transition-all duration-400 ease-out hover:scale-110"
                   onClick={() => setShowDropdown(prev => !prev)}
