@@ -137,39 +137,79 @@ export default function TranslatePDF() {
     setTimeout(() => setIsScrolling(false), 100); // Reset trạng thái sau một khoảng thời gian ngắn
   };
 
-  const renderContent = (sections = [], images = [], pageRange, isTranslation = false) => {
-    const startPage = (pageRange - 1) * pagesToShow + 1;
-    const endPage = Math.min(startPage + pagesToShow - 1, pdfStructure?.pageCount || 1);
+  const contentRenderers = {
+  heading: ({ section, index }) => (
+    <div key={index} className="mb-4 pb-2 border-b border-gray-100">
+      <h2 className="text-2xl font-bold text-gray-800">
+        {section.content}
+        <span className="ml-2 text-xs text-gray-400">Page {section.page || 1}</span>
+      </h2>
+    </div>
+  ),
+  list: ({ section, index }) => (
+    <div key={index} className="mb-4 ml-5">
+      <ul className="list-disc text-gray-700 whitespace-pre-wrap leading-relaxed">
+        {(section.items || []).map((item, i) => (
+          <li key={i} className="mb-2">{item || 'No item'}</li>
+        ))}
+      </ul>
+    </div>
+  ),
+  text: ({ section, index }) => {
+    const lines = Array.isArray(section.content)
+      ? section.content
+      : section.content.split(/(?:\n\s*\n|\n)/).filter(line => line.trim());
+    return (
+      <div key={index} className="mb-4">
+        {lines.map((line, lineIdx) => (
+          <p key={lineIdx} className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+            {line || 'No content'}
+          </p>
+        ))}
+      </div>
+    );
+  },
+  image: ({ image, index }) => (
+    <div key={index} className="mb-4">
+      <img src={image.url} alt={`Page ${image.page}`} className="max-w-full h-auto rounded-lg" />
+      <p className="text-xs text-gray-400">Image on Page {image.page}</p>
+    </div>
+  ),
+};
 
-    let contentToRender = sections.length > 0 ? sections : (file.sections || []);
-    let imagesToRender = images.length > 0 ? images : (file.images || []);
+// Updated renderContent function
+const renderContent = (sections = [], images = [], pageRange, isTranslation = false, pdfStructure, file, translatedContent, translationError) => {
+  const startPage = (pageRange - 1) * pagesToShow + 1;
+  const endPage = Math.min(startPage + pagesToShow - 1, pdfStructure?.pageCount || 1);
 
-    if (isTranslation && translatedContent) {
-      contentToRender = translatedContent.paragraphs.map((para, idx) => ({
-        type: 'text',
-        content: para.replace(/\*\*/g, ''),
-        page: Math.floor(idx / (translatedContent.paragraphs.length / (pdfStructure?.pageCount || 1))) + 1,
-      }));
-      imagesToRender = [];
-    }
+  let contentToRender = sections.length > 0 ? sections : (file.sections || []);
+  let imagesToRender = images.length > 0 ? images : (file.images || []);
 
-    if (!isTranslation) {
-      contentToRender = contentToRender.map(section => {
-        if (section.type === 'text') {
-          const paragraphs = section.content
-            .split(/(?:\n\s*\n|\n)/)
-            .map(p => p.trim())
-            .filter(p => p.length > 0);
-          return paragraphs.map((content, idx) => ({
-            ...section,
-            content,
-            subIndex: idx,
-          }));
-        }
-        return section;
-      }).flat();
-    }
+  if (isTranslation && translatedContent) {
+    contentToRender = translatedContent.paragraphs.map((para, idx) => ({
+      type: 'text',
+      content: para.replace(/\*\*/g, ''),
+      page: Math.floor(idx / (translatedContent.paragraphs.length / (pdfStructure?.pageCount || 1))) + 1,
+    }));
+    imagesToRender = [];
+  }
 
+  if (!isTranslation) {
+    contentToRender = contentToRender.map(section => {
+      if (section.type === 'text') {
+        const paragraphs = section.content
+          .split(/(?:\n\s*\n|\n)/)
+          .map(p => p.trim())
+          .filter(p => p.length > 0);
+        return paragraphs.map((content, idx) => ({
+          ...section,
+          content,
+          subIndex: idx,
+        }));
+      }
+      return section;
+    }).flat();
+  }
     const filteredSections = contentToRender.filter(s => s.page >= startPage && s.page <= endPage);
     const filteredImages = imagesToRender.filter(img => img.page >= startPage && img.page <= endPage);
 

@@ -56,7 +56,7 @@ router.get(
         // Tùy theo vai trò, chọn URL đúng
         let baseUrl = process.env.FRONTEND_URL;
         if (originalUrl === '/admin-login' && user.role === 'admin') {
-          baseUrl = process.env.ADMIN_FRONTEND_URL || 'http://localhost:3001';
+          baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
         }
 
         return res.redirect(`${baseUrl}${redirectPath}`);
