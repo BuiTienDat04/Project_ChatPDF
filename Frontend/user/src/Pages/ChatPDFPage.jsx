@@ -13,10 +13,7 @@ import { MessageSquare, Grid, FileText, X, SendIcon } from "lucide-react";
 // Component Button đơn giản
 function CustomButton({ children, className, ...props }) {
   return (
-    <button
-      className={`px-4 py-2 rounded-md ${className}`}
-      {...props}
-    >
+    <button className={`px-4 py-2 rounded-md ${className}`} {...props}>
       {children}
     </button>
   );
@@ -41,7 +38,7 @@ function UploadHistory({ uploadHistory }) {
             >
               <div>
                 <p className="text-sm font-medium text-gray-800">{file.name}</p>
-                <p className=" gritosext-xs text-gray-600">Uploaded: {file.date}</p>
+                <p className="text-xs text-gray-600">Uploaded: {file.date}</p>
               </div>
               <CustomButton
                 className="bg-purple-200 hover:bg-purple-300 text-gray-800 rounded-md px-3 py-1 text-sm font-medium transition"
@@ -76,7 +73,8 @@ export default function Home() {
   const [chatMessages, setChatMessages] = useState([
     {
       role: "system",
-      content: "Xin chào! Tôi có thể giúp bạn hiểu nội dung của tệp PDF này. Hãy hỏi tôi bất cứ điều gì về trang chiếu hiện tại.",
+      content:
+        "Xin chào! Tôi có thể giúp bạn hiểu nội dung của tệp PDF này. Hãy hỏi tôi bất cứ điều gì về trang chiếu hiện tại.",
     },
   ]);
   const [chatInput, setChatInput] = useState("");
@@ -116,9 +114,11 @@ export default function Home() {
   }, [rightSidebarState]);
 
   // Save ChatBot scroll position when scrolled
-  const handleChatScroll = () => {
+  const handleChatScroll = (e) => {
     if (chatContainerRef.current) {
       setChatScrollPosition(chatContainerRef.current.scrollTop);
+      e.stopPropagation(); // Ngăn sự kiện cuộn lan truyền
+      e.preventDefault(); // Ngăn hành vi cuộn mặc định nếu có
     }
   };
 
@@ -245,7 +245,10 @@ export default function Home() {
     setIsChatLoading(true);
 
     try {
-      const aiResponseContent = await simulateAIResponse(chatInput, pdfPages[currentPage]?.textContent || "");
+      const aiResponseContent = await simulateAIResponse(
+        chatInput,
+        pdfPages[currentPage]?.textContent || ""
+      );
       const aiMessage = {
         role: "assistant",
         content: aiResponseContent,
@@ -281,7 +284,10 @@ export default function Home() {
         let responseText = "";
         if (question.toLowerCase().includes("gì") || question.toLowerCase().includes("what")) {
           responseText = `Slide này nói về: ${currentPdfContent}`;
-        } else if (question.toLowerCase().includes("tóm tắt") || question.toLowerCase().includes("summary")) {
+        } else if (
+          question.toLowerCase().includes("tóm tắt") ||
+          question.toLowerCase().includes("summary")
+        ) {
           responseText = `Tóm tắt: ${currentPdfContent.slice(0, 50)}...`;
         } else {
           responseText = `Bạn hỏi: "${question}". Dựa trên slide: ${currentPdfContent}`;
@@ -303,7 +309,7 @@ export default function Home() {
   const sidebarContentHeight = `calc(100vh - ${navHeight}px - ${headerHeight}px)`; // Constrain to viewport height
 
   return (
-    <main className="flex flex-col min-h-screen bg-white font-poppins">
+    <main className="flex flex-col min-h-screen bg-white font-poppins" onScroll={(e) => e.stopPropagation()}>
       <style jsx>{`
         button:disabled {
           opacity: 0.5;
@@ -324,6 +330,15 @@ export default function Home() {
         .scrollbar-visible::-webkit-scrollbar-thumb:hover {
           background: #555;
         }
+        /* Isolate scrolling for containers */
+        .scroll-isolated {
+          overscroll-behavior: contain; /* Prevent scroll propagation */
+          isolation: isolate; /* Create a new stacking context */
+          position: relative; /* Ensure proper stacking context */
+          touch-action: manipulation; /* Optimize touch scrolling behavior */
+          -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+          overflow-anchor: none; /* Prevent scroll anchoring issues */
+        }
       `}</style>
       <Navigation
         setPdfFile={setPdfFile}
@@ -332,9 +347,10 @@ export default function Home() {
         setIsLoading={setIsLoading}
         pdfLoaded={pdfLoaded}
         onFileUpload={handleFileUpload}
+        style={{ position: "fixed", top: 0, width: "100%", zIndex: 50, backgroundColor: "#F5F5F5" }}
       />
       {pdfFile ? (
-        <div className="flex flex-1 h-[calc(100vh-80px)] mt-[80px] relative">
+        <div className="flex flex-1 h-[calc(100vh-80px)] mt-[80px] relative scroll-isolated" onScroll={(e) => e.stopPropagation()}>
           {/* Left Sidebar (All Slides) */}
           <div
             className={`border-r bg-white shadow-md transition-all duration-300 flex flex-col ${
@@ -368,7 +384,7 @@ export default function Home() {
             </div>
             <div
               ref={leftSidebarContentRef}
-              className={`overflow-y-auto scrollbar-visible ${
+              className={`scroll-isolated overflow-y-auto scrollbar-visible ${
                 leftSidebarState === "expanded" ? "p-4" : "p-2"
               }`}
               style={{ height: sidebarContentHeight }}
@@ -415,7 +431,7 @@ export default function Home() {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-row min-h-0">
+          <div className="flex-1 flex flex-row min-h-0 scroll-isolated" onScroll={(e) => e.stopPropagation()}>
             {/* Original Slides */}
             <div className="w-1/2 flex flex-col min-h-0 border-r">
               <div
@@ -429,7 +445,8 @@ export default function Home() {
               <div
                 id="original-slide-container"
                 ref={originalContainerRef}
-                className="flex-1 p-6 overflow-y-auto bg-white rounded-lg shadow-inner"
+                className="scroll-isolated flex-1 p-6 overflow-y-auto bg-white rounded-lg shadow-inner"
+                onScroll={(e) => e.stopPropagation()} // Ngăn cuộn lan truyền
               >
                 <SlideViewer pages={pdfPages} currentPage={currentPage} pdfFile={pdfFile} />
               </div>
@@ -472,7 +489,8 @@ export default function Home() {
               <div
                 id="translated-slide-container"
                 ref={translatedContainerRef}
-                className="flex-1 p-6 overflow-y-auto bg-white rounded-lg shadow-inner"
+                className="scroll-isolated flex-1 p-6 overflow-y-auto bg-white rounded-lg shadow-inner"
+                onScroll={(e) => e.stopPropagation()} // Ngăn cuộn lan truyền
               >
                 <TranslatedSlide
                   translatedPages={translatedPages}
@@ -485,16 +503,16 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Sidebar (ChatBot) */}
+          {/* Right Sidebar (ChatBot) - Fixed Position */}
           <div
-            className={`border-l bg-white shadow-md transition-all duration-300 flex flex-col ${
+            className={`fixed top-[80px] right-0 bg-white shadow-md transition-all duration-300 flex flex-col ${
               rightSidebarState === "collapsed" ? "w-16" : "w-72"
             }`}
-            style={{ backgroundColor: "#F5F5F5" }}
+            style={{ backgroundColor: "#F5F5F5", height: `calc(100vh - 80px)` }}
           >
             <div
               className="p-4 border-b flex items-center justify-between bg-white sticky z-20"
-              style={{ backgroundColor: "#F5F5F5", top: `${navHeight}px` }}
+              style={{ backgroundColor: "#F5F5F5", top: 0 }}
             >
               {rightSidebarState === "expanded" && (
                 <>
@@ -517,12 +535,9 @@ export default function Home() {
               )}
             </div>
             <div
-              className={`overflow-y-auto scrollbar-visible ${
-                rightSidebarState === "expanded" ? "" : ""
-              }`}
+              className="scroll-isolated overflow-y-auto scrollbar-visible flex-1"
               ref={chatContainerRef}
               onScroll={handleChatScroll}
-              style={{ height: rightSidebarState === "expanded" ? `calc(${sidebarContentHeight} - ${chatInputHeight}px)` : sidebarContentHeight }}
             >
               {rightSidebarState === "collapsed" ? (
                 <div className="flex flex-col items-center space-y-2 mt-2">
@@ -545,6 +560,27 @@ export default function Home() {
                 )
               )}
             </div>
+            {rightSidebarState === "expanded" && (
+              <div className="p-4 border-t border-gray-200">
+                <form onSubmit={handleChatSubmit} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Hỏi về trang chiếu này..."
+                    className="flex-grow px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 text-gray-700 bg-white hover:border-gray-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={isChatLoading}
+                  />
+                  <CustomButton
+                    type="submit"
+                    disabled={isChatLoading || !chatInput.trim()}
+                    className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all disabled:opacity-60 disabled:cursor-not-allowed p-2.5"
+                  >
+                    <SendIcon className="h-4 w-4" />
+                  </CustomButton>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -569,7 +605,9 @@ export default function Home() {
                 >
                   <div className="text-center">
                     <FileText className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-                    <p className="text-gray-700 font-medium mb-2">Drag and drop or click to upload a PDF</p>
+                    <p className="text-gray-700 font-medium mb-2">
+                      Drag and drop or click to upload a PDF
+                    </p>
                     <p className="text-sm text-gray-500">Supported formats: PDF (max 10MB)</p>
                   </div>
                 </FileUploader>
@@ -577,37 +615,8 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-8 p-10 sm:p-12 md:p-14 border border-purple-300 rounded-2xl bg-purple-100 shadow-md max-w-6xl w-full mx-4">
-            <UploadHistory
-              uploadHistory={uploadHistory}
-              className="text-gray-700 font-medium"
-            />
+            <UploadHistory uploadHistory={uploadHistory} className="text-gray-700 font-medium" />
           </div>
-        </div>
-      )}
-
-      {/* FIXED CHAT INPUT AT BOTTOM RIGHT */}
-      {pdfFile && rightSidebarState === 'expanded' && (
-        <div
-          className="fixed bottom-0 right-0 w-72 bg-white p-4 border-t border-l border-gray-200 z-50 shadow-lg"
-          style={{ paddingBottom: '1.5rem' }}
-        >
-          <form onSubmit={handleChatSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Hỏi về trang chiếu này..."
-              className="flex-grow px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 text-gray-700 bg-white hover:border-gray-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-              disabled={isChatLoading}
-            />
-            <CustomButton
-              type="submit"
-              disabled={isChatLoading || !chatInput.trim()}
-              className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all disabled:opacity-60 disabled:cursor-not-allowed p-2.5"
-            >
-              <SendIcon className="h-4 w-4" />
-            </CustomButton>
-          </form>
         </div>
       )}
     </main>
