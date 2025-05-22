@@ -70,9 +70,9 @@ router.get('/user', ensureAuthenticated, (req, res) => {
     res.json({
       id: req.user.id,
       _id: req.user._id || req.user.id,
-      name: req.user.fullName || req.user.displayName,
+      fullName: req.user.fullName || req.user.displayName,
       email: req.user.email || req.user.emails?.[0]?.value,
-      avatar: req.user.picture || req.user.photos?.[0]?.value,
+      picture: req.user.picture || req.user.photos?.[0]?.value,
       role: req.user.role || 'user',
       userId: req.user.id || req.user.userId,
       token: req.user.token || '',
