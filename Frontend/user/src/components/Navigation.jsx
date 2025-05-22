@@ -5,6 +5,7 @@ import LoginModal from '../Pages/LoginPage';
 import RegisterModal from '../Pages/RegisterPage';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../api/api';
+import socket from '../socket';
 
 const Navigation = ({ user, onLogout }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -50,6 +51,20 @@ const Navigation = ({ user, onLogout }) => {
     setIsLoggedIn(true);
   }
 }, [user]);
+
+useEffect(() => {
+  if (isLoggedIn) {
+    console.log('🔌 Connecting WebSocket...');
+    socket.connect();
+  } else {
+    console.log('❌ Disconnecting WebSocket...');
+    socket.disconnect();
+  }
+
+  return () => {
+    socket.disconnect(); 
+  };
+}, [isLoggedIn]);
 
   const handleLogout = async () => {
     try {

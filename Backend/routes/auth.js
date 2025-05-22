@@ -53,10 +53,14 @@ router.get(
           redirectPath = `/home?loggedIn=true`;
         }
 
-        let baseUrl = process.env.FRONTEND_URL;
+        let baseUrl;
+
         if (originalUrl === '/admin-login' && user.role === 'admin') {
-          baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+          baseUrl = process.env.FRONTEND_ADMIN_URL;
+        } else {
+          baseUrl = process.env.FRONTEND_USER_URL;
         }
+
 
         return res.redirect(`${baseUrl}${redirectPath}`);
       });
