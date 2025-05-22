@@ -16,36 +16,40 @@ const Navigation = ({ user, onLogout }) => {
   const dropdownTimeoutRef = useRef(null);
 
   // Check user login status on mount and sync with prop
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/auth/user`, {
-          method: 'GET',
-          credentials: 'include', // Include cookies for session
-        });
-        if (response.ok) {
-          const userData = await response.json();
-          setCurrentUser(userData);
-          setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
-          setCurrentUser(null);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
+ useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      console.log('Fetching user from:', `${API_BASE_URL}/auth/user`);
+      const response = await fetch(`${API_BASE_URL}/auth/user`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      console.log('Response status:', response.status);
+      if (response.ok) {
+        const userData = await response.json();
+        console.log('User data:', userData);
+        setCurrentUser(userData);
+        setIsLoggedIn(true);
+      } else {
+        console.log('Failed to fetch user:', response.status, response.statusText);
         setIsLoggedIn(false);
         setCurrentUser(null);
       }
-    };
-
-    // If no user prop, fetch from API
-    if (!user) {
-      fetchUser();
-    } else {
-      setCurrentUser(user);
-      setIsLoggedIn(true);
+    } catch (error) {
+      console.error('Error fetching user:', error.message);
+      setIsLoggedIn(false);
+      setCurrentUser(null);
     }
-  }, [user]);
+  };
+
+  console.log('User prop:', user);
+  if (!user) {
+    fetchUser();
+  } else {
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+  }
+}, [user]);
 
   const handleLogout = async () => {
     try {
