@@ -8,6 +8,10 @@ import TranslatedSlide from "../components/translated-slide";
 import ChatBot from "../components/chat-bot";
 import Navigation from "../components/Navigation";
 import { Button } from "../components/ui/button";
+import Cart from "../components/Cart"
+import InstructionSection from "../components/InstructionSection";
+import QuestionChatPdf from "../components/QuestionChatPdf";
+import Footer from "../components/Footer";
 import { MessageSquare, Grid, FileText, X, SendIcon } from "lucide-react";
 
 // Component Button đơn giản
@@ -353,9 +357,8 @@ export default function Home() {
         <div className="flex flex-1 h-[calc(100vh-80px)] mt-[80px] relative scroll-isolated" onScroll={(e) => e.stopPropagation()}>
           {/* Left Sidebar (All Slides) */}
           <div
-            className={`border-r bg-white shadow-md transition-all duration-300 flex flex-col ${
-              leftSidebarState === "collapsed" ? "w-16" : "w-72"
-            }`}
+            className={`border-r bg-white shadow-md transition-all duration-300 flex flex-col ${leftSidebarState === "collapsed" ? "w-16" : "w-72"
+              }`}
             style={{ backgroundColor: "#F5F5F5" }}
           >
             <div
@@ -384,9 +387,8 @@ export default function Home() {
             </div>
             <div
               ref={leftSidebarContentRef}
-              className={`scroll-isolated overflow-y-auto scrollbar-visible ${
-                leftSidebarState === "expanded" ? "p-4" : "p-2"
-              }`}
+              className={`scroll-isolated overflow-y-auto scrollbar-visible ${leftSidebarState === "expanded" ? "p-4" : "p-2"
+                }`}
               style={{ height: sidebarContentHeight }}
             >
               {leftSidebarState === "collapsed" ? (
@@ -407,11 +409,10 @@ export default function Home() {
                         setLeftSidebarState("expanded");
                         setCurrentPage(index);
                       }}
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${
-                        currentPage === index
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${currentPage === index
                           ? "bg-gray-200 text-gray-800 border border-gray-400 shadow-md"
                           : "bg-white border border-gray-300 hover:bg-gray-50 shadow-sm"
-                      }`}
+                        }`}
                       style={{ color: "#4A4A4A" }}
                     >
                       {page.pageNumber}
@@ -505,9 +506,8 @@ export default function Home() {
 
           {/* Right Sidebar (ChatBot) - Fixed Position */}
           <div
-            className={`fixed top-[80px] right-0 bg-white shadow-md transition-all duration-300 flex flex-col ${
-              rightSidebarState === "collapsed" ? "w-16" : "w-72"
-            }`}
+            className={`fixed top-[80px] right-0 bg-white shadow-md transition-all duration-300 flex flex-col ${rightSidebarState === "collapsed" ? "w-16" : "w-72"
+              }`}
             style={{ backgroundColor: "#F5F5F5", height: `calc(100vh - 80px)` }}
           >
             <div
@@ -584,7 +584,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center flex-grow p-12 sm:p-14 md:p-16 bg-gray-100 min-h-screen">
+        <div className="flex flex-col items-center justify-center flex-grow p-12 sm:p-14 md:p-16 bg-gray-100 min-h-screen mt-20 ">
           <div className="text-center p-10 sm:p-12 md:p-14 border border-gray-200 rounded-2xl bg-purple-100 shadow-md max-w-6xl w-full mx-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-8">
               Welcome to PDF Translator
@@ -619,6 +619,13 @@ export default function Home() {
           </div>
         </div>
       )}
+      <Cart />
+
+      <InstructionSection />
+
+      <QuestionChatPdf />
+
+      <Footer />
     </main>
   );
 }

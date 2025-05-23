@@ -13,7 +13,9 @@ import ChatBotPage from './Pages/ChatBotPage';
 import HomePage from './Pages/HomePage';
 import TestimonialsSection from './components/TestimonialsSection';
 import OurVisionSection from './components/OurVisionSection';
-
+import Cart from './components/Cart';
+import InstructionSection from './components/InstructionSection';
+import QuestionChatPdf from './components/QuestionChatPdf';
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -66,6 +68,9 @@ export default function App() {
         <Route path="/ourvisionsection" element={<OurVisionSection />} />
         <Route path="/login" element={<LoginPage setCurrentUser={setCurrentUser} />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/instructionsection" element={<InstructionSection />} />
+        <Route path="/questionchatpdf" element={<QuestionChatPdf />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/chatbot" element={<ChatBotPage />} />
         <Route path="/chatpdf" element={<ChatPDFPage />} />
