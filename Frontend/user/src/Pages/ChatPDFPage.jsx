@@ -8,7 +8,7 @@ import TranslatedSlide from "../components/translated-slide";
 import ChatBot from "../components/chat-bot";
 import Navigation from "../components/Navigation";
 import { Button } from "../components/ui/button";
-import Cart from "../components/Cart"
+import Cart from "../components/Cart";
 import InstructionSection from "../components/InstructionSection";
 import QuestionChatPdf from "../components/QuestionChatPdf";
 import Footer from "../components/Footer";
@@ -27,10 +27,10 @@ function CustomButton({ children, className, ...props }) {
 function UploadHistory({ uploadHistory }) {
   return (
     <div
-      className="mt-8 p-4 border border-purple-300 rounded-lg shadow-sm max-w-6xl mx-auto w-full"
+      className="mt-8 p-6 border border-purple-300 rounded-2xl shadow-md w-full max-w-6xl mx-auto"
       style={{ backgroundColor: "#F3E8FF" }}
     >
-      <h3 className="text-lg font-semibold text-gray-700 mb-3">Upload History</h3>
+      <h3 className="text-lg font-semibold text-gray-700 mb-4">Upload History</h3>
       {uploadHistory.length === 0 ? (
         <p className="text-gray-600 text-sm">No files uploaded yet.</p>
       ) : (
@@ -69,11 +69,9 @@ export default function Home() {
   const [uploadHistory, setUploadHistory] = useState([]);
   const originalContainerRef = useRef(null);
   const translatedContainerRef = useRef(null);
-  const chatContainerRef = useRef(null); // Ref for ChatBot container
-  const leftSidebarContentRef = useRef(null); // Ref for All Slides content
-  const [chatScrollPosition, setChatScrollPosition] = useState(0); // State to store ChatBot scroll position
-
-  // States for ChatBot
+  const chatContainerRef = useRef(null);
+  const leftSidebarContentRef = useRef(null);
+  const [chatScrollPosition, setChatScrollPosition] = useState(0);
   const [chatMessages, setChatMessages] = useState([
     {
       role: "system",
@@ -83,12 +81,9 @@ export default function Home() {
   ]);
   const [chatInput, setChatInput] = useState("");
   const [isChatLoading, setIsChatLoading] = useState(false);
-
-  // Sidebar state
   const [leftSidebarState, setLeftSidebarState] = useState("expanded");
   const [rightSidebarState, setRightSidebarState] = useState("expanded");
 
-  // Load PDF.js script
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
@@ -110,19 +105,17 @@ export default function Home() {
     };
   }, []);
 
-  // Restore ChatBot scroll position when right sidebar is expanded
   useEffect(() => {
     if (rightSidebarState === "expanded" && chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatScrollPosition;
     }
   }, [rightSidebarState]);
 
-  // Save ChatBot scroll position when scrolled
   const handleChatScroll = (e) => {
     if (chatContainerRef.current) {
       setChatScrollPosition(chatContainerRef.current.scrollTop);
-      e.stopPropagation(); // Ngăn sự kiện cuộn lan truyền
-      e.preventDefault(); // Ngăn hành vi cuộn mặc định nếu có
+      e.stopPropagation();
+      e.preventDefault();
     }
   };
 
@@ -138,42 +131,34 @@ export default function Home() {
     { code: "ru", name: "Russian" },
   ];
 
-  // Toggle sidebar functions
   const toggleLeftSidebar = () => {
     setLeftSidebarState((current) => (current === "collapsed" ? "expanded" : "collapsed"));
   };
 
   const toggleRightSidebar = () => {
     if (rightSidebarState === "expanded" && chatContainerRef.current) {
-      // Save scroll position before collapsing
       setChatScrollPosition(chatContainerRef.current.scrollTop);
     }
     setRightSidebarState((current) => (current === "collapsed" ? "expanded" : "collapsed"));
   };
 
-  // Handle file upload
   const handleFileUpload = (fileInfo) => {
     console.log("Adding to upload history:", fileInfo);
     setUploadHistory((prev) => [fileInfo, ...prev]);
   };
 
-  // Analyze and translate content
   const analyzeAndTranslateContent = () => {
     if (pdfPages.length > 0) {
       setIsLoading(true);
-
       setTimeout(() => {
         const translated = pdfPages.map((page, pageIndex) => {
           const selectedLanguage = languages.find((l) => l.code === targetLanguage)?.name || "Spanish";
-
           const hasTable =
             page.textContent.includes("|") ||
             page.textContent.match(/\n\s*[-+]{3,}\s*\n/g) !== null ||
             (page.textContent.match(/\b\d+(\.\d+)?\s*%\b/g) !== null &&
               page.textContent.match(/\b(total|sum|average)\b/gi) !== null);
-
           const hasList = page.textContent.match(/^\s*[\d*-]\s+.+/gm) !== null;
-
           const hasHeading =
             page.textContent.match(/^.{1,60}\n\s*={3,}|-{3,}/m) !== null ||
             page.textContent.match(/^#+\s+.+/gm) !== null;
@@ -237,10 +222,8 @@ export default function Home() {
     }
   };
 
-  // Handle ChatBot submission
   const handleChatSubmit = async (e) => {
     e.preventDefault();
-
     if (!chatInput.trim()) return;
 
     const userMessage = { role: "user", content: chatInput };
@@ -259,7 +242,6 @@ export default function Home() {
       };
       setChatMessages((prev) => {
         const newMessages = [...prev, aiMessage];
-        // Scroll to bottom only when new messages are added
         setTimeout(() => {
           if (chatContainerRef.current && rightSidebarState === "expanded") {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -281,7 +263,6 @@ export default function Home() {
     }
   };
 
-  // Simulate AI response
   const simulateAIResponse = (question, currentPdfContent) => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -306,21 +287,19 @@ export default function Home() {
   console.log("pdfLoaded:", pdfLoaded);
   console.log("uploadHistory:", uploadHistory);
 
-  // Tính toán padding bottom cho main content and sidebar content height
   const chatInputHeight = 70;
-  const navHeight = 80; // Navigation bar height
-  const headerHeight = 64; // Sidebar header height (p-4 + content, adjustable)
-  const sidebarContentHeight = `calc(100vh - ${navHeight}px - ${headerHeight}px)`; // Constrain to viewport height
+  const navHeight = 80;
+  const headerHeight = 64;
+  const sidebarContentHeight = `calc(100vh - ${navHeight}px - ${headerHeight}px)`;
 
   return (
-    <main className="flex flex-col min-h-screen bg-white font-poppins" onScroll={(e) => e.stopPropagation()}>
+    <main className="flex flex-col min-h-screen bg-gray-100 font-poppins">
       <style jsx>{`
         button:disabled {
           opacity: 0.5;
           display: block !important;
           visibility: visible !important;
         }
-        /* Ensure scrollbar is always visible */
         .scrollbar-visible::-webkit-scrollbar {
           width: 8px;
         }
@@ -334,14 +313,13 @@ export default function Home() {
         .scrollbar-visible::-webkit-scrollbar-thumb:hover {
           background: #555;
         }
-        /* Isolate scrolling for containers */
         .scroll-isolated {
-          overscroll-behavior: contain; /* Prevent scroll propagation */
-          isolation: isolate; /* Create a new stacking context */
-          position: relative; /* Ensure proper stacking context */
-          touch-action: manipulation; /* Optimize touch scrolling behavior */
-          -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
-          overflow-anchor: none; /* Prevent scroll anchoring issues */
+          overscroll-behavior: contain;
+          isolation: isolate;
+          position: relative;
+          touch-action: manipulation;
+          -webkit-overflow-scrolling: touch;
+          overflow-anchor: none;
         }
       `}</style>
       <Navigation
@@ -354,11 +332,12 @@ export default function Home() {
         style={{ position: "fixed", top: 0, width: "100%", zIndex: 50, backgroundColor: "#F5F5F5" }}
       />
       {pdfFile ? (
-        <div className="flex flex-1 h-[calc(100vh-80px)] mt-[80px] relative scroll-isolated" onScroll={(e) => e.stopPropagation()}>
+        <div className="flex flex-1 h-[calc(100vh-80px)] mt-[80px] relative scroll-isolated">
           {/* Left Sidebar (All Slides) */}
           <div
-            className={`border-r bg-white shadow-md transition-all duration-300 flex flex-col ${leftSidebarState === "collapsed" ? "w-16" : "w-72"
-              }`}
+            className={`border-r bg-white shadow-md transition-all duration-300 flex flex-col ${
+              leftSidebarState === "collapsed" ? "w-16" : "w-72"
+            }`}
             style={{ backgroundColor: "#F5F5F5" }}
           >
             <div
@@ -387,8 +366,9 @@ export default function Home() {
             </div>
             <div
               ref={leftSidebarContentRef}
-              className={`scroll-isolated overflow-y-auto scrollbar-visible ${leftSidebarState === "expanded" ? "p-4" : "p-2"
-                }`}
+              className={`scroll-isolated overflow-y-auto scrollbar-visible ${
+                leftSidebarState === "expanded" ? "p-4" : "p-2"
+              }`}
               style={{ height: sidebarContentHeight }}
             >
               {leftSidebarState === "collapsed" ? (
@@ -409,10 +389,11 @@ export default function Home() {
                         setLeftSidebarState("expanded");
                         setCurrentPage(index);
                       }}
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${currentPage === index
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-medium transition ${
+                        currentPage === index
                           ? "bg-gray-200 text-gray-800 border border-gray-400 shadow-md"
                           : "bg-white border border-gray-300 hover:bg-gray-50 shadow-sm"
-                        }`}
+                      }`}
                       style={{ color: "#4A4A4A" }}
                     >
                       {page.pageNumber}
@@ -432,7 +413,7 @@ export default function Home() {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-row min-h-0 scroll-isolated" onScroll={(e) => e.stopPropagation()}>
+          <div className="flex-1 flex flex-row min-h-0 scroll-isolated">
             {/* Original Slides */}
             <div className="w-1/2 flex flex-col min-h-0 border-r">
               <div
@@ -447,7 +428,6 @@ export default function Home() {
                 id="original-slide-container"
                 ref={originalContainerRef}
                 className="scroll-isolated flex-1 p-6 overflow-y-auto bg-white rounded-lg shadow-inner"
-                onScroll={(e) => e.stopPropagation()} // Ngăn cuộn lan truyền
               >
                 <SlideViewer pages={pdfPages} currentPage={currentPage} pdfFile={pdfFile} />
               </div>
@@ -491,7 +471,6 @@ export default function Home() {
                 id="translated-slide-container"
                 ref={translatedContainerRef}
                 className="scroll-isolated flex-1 p-6 overflow-y-auto bg-white rounded-lg shadow-inner"
-                onScroll={(e) => e.stopPropagation()} // Ngăn cuộn lan truyền
               >
                 <TranslatedSlide
                   translatedPages={translatedPages}
@@ -504,10 +483,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Sidebar (ChatBot) - Fixed Position */}
+          {/* Right Sidebar (ChatBot) */}
           <div
-            className={`fixed top-[80px] right-0 bg-white shadow-md transition-all duration-300 flex flex-col ${rightSidebarState === "collapsed" ? "w-16" : "w-72"
-              }`}
+            className={`fixed top-[80px] right-0 bg-white shadow-md transition-all duration-300 flex flex-col ${
+              rightSidebarState === "collapsed" ? "w-16" : "w-72"
+            }`}
             style={{ backgroundColor: "#F5F5F5", height: `calc(100vh - 80px)` }}
           >
             <div
@@ -584,48 +564,51 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center flex-grow p-12 sm:p-14 md:p-16 bg-gray-100 min-h-screen mt-20 ">
-          <div className="text-center p-10 sm:p-12 md:p-14 border border-gray-200 rounded-2xl bg-purple-100 shadow-md max-w-6xl w-full mx-4">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-8">
-              Welcome to PDF Translator
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 mb-10 font-medium">
-              Upload a PDF file to get started
-            </p>
-            <div className="flex justify-center">
-              <div className="w-full">
-                <FileUploader
-                  setPdfFile={setPdfFile}
-                  setPdfPages={setPdfPages}
-                  setTranslatedPages={setTranslatedPages}
-                  setIsLoading={setIsLoading}
-                  pdfLoaded={pdfLoaded}
-                  onFileUpload={handleFileUpload}
-                  className="w-full max-w-md p-8 sm:p-10 bg-purple-100 border border-purple-300 rounded-2xl shadow-sm hover:bg-purple-200 transition duration-200"
-                >
-                  <div className="text-center">
-                    <FileText className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-                    <p className="text-gray-700 font-medium mb-2">
-                      Drag and drop or click to upload a PDF
-                    </p>
-                    <p className="text-sm text-gray-500">Supported formats: PDF (max 10MB)</p>
-                  </div>
-                </FileUploader>
-              </div>
+        <div className="flex flex-col min-h-screen bg-gray-100">
+          <div className="flex flex-col items-center flex-grow p-6 sm:p-8 md:p-12 mt-20">
+            <div className="text-center p-6 sm:p-8 md:p-10 border border-gray-200 rounded-2xl bg-purple-100 shadow-md w-full max-w-6xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-6">
+                Welcome to PDF Translator
+              </h2>
+              <p className="text-base sm:text-lg text-gray-600 mb-8 font-medium">
+                Upload a PDF file to get started
+              </p>
+              <FileUploader
+                setPdfFile={setPdfFile}
+                setPdfPages={setPdfPages}
+                setTranslatedPages={setTranslatedPages}
+                setIsLoading={setIsLoading}
+                pdfLoaded={pdfLoaded}
+                onFileUpload={handleFileUpload}
+                className="w-full max-w-md mx-auto p-6 sm:p-8 bg-purple-100 border border-purple-300 rounded-2xl shadow-md hover:bg-purple-200 transition duration-200"
+              >
+                <div className="text-center">
+                  <FileText className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+                  <p className="text-gray-700 font-medium mb-2">
+                    Drag and drop or click to upload a PDF
+                  </p>
+                  <p className="text-sm text-gray-500">Supported formats: PDF (max 10MB)</p>
+                </div>
+              </FileUploader>
+            </div>
+            <div className="mt-8 w-full max-w-6xl mx-auto">
+              <UploadHistory uploadHistory={uploadHistory} />
+            </div>
+            <div className="mt-8 w-full">
+              <Cart />
+            </div>
+            <div className="mt-8 w-full">
+              <InstructionSection />
+            </div>
+            <div className="mt-8 w-full">
+              <QuestionChatPdf />
             </div>
           </div>
-          <div className="mt-8 p-10 sm:p-12 md:p-14 border border-purple-300 rounded-2xl bg-purple-100 shadow-md max-w-6xl w-full mx-4">
-            <UploadHistory uploadHistory={uploadHistory} className="text-gray-700 font-medium" />
+          <div className="mt-auto w-full">
+            <Footer />
           </div>
         </div>
       )}
-      <Cart />
-
-      <InstructionSection />
-
-      <QuestionChatPdf />
-
-      <Footer />
     </main>
   );
 }
