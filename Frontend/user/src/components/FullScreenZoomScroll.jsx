@@ -1,125 +1,135 @@
-
 import '../animation.css';
-
-import React, { useRef, useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { FaRobot, FaFilePdf, FaSearchPlus } from 'react-icons/fa';
 
-const ZoomScrollSection = ({ children, isActive }) => {
-  return (
+const ZoomScrollSection = memo(({ children, isActive, innerRef }) => (
+  <div
+    ref={innerRef}
+    className={`
+      absolute w-full h-screen flex items-center justify-center px-6 sm:px-10
+      transition-all duration-700 ease-[cubic-bezier(0.33,1,0.68,1)]
+      ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'}
+    `}
+    style={{ top: '60px' }}
+  >
+    <div className="relative z-10 max-w-5xl w-full text-center">
+      {children}
+    </div>
+  </div>
+));
+
+const FeatureTab = memo(({ tab, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`
+      relative flex items-center gap-4 p-4 rounded-xl w-full max-w-sm
+      transition-all duration-300 ease-in-out
+      ${isActive
+        ? `bg-gradient-to-r ${tab.colorClass} shadow-xl scale-105 text-white`
+        : 'bg-gray-800/60 hover:bg-gray-700/80 text-gray-200 hover:scale-102'}
+      group focus:outline-none focus:ring-2 focus:ring-white/30
+    `}
+  >
+    <div className="flex-shrink-0">
+      {React.cloneElement(tab.icon, { className: 'h-10 w-10' })}
+    </div>
+    <div className="text-left">
+      <span className="block text-base font-semibold">Tính năng {tab.number}</span>
+      <span className="text-xl font-bold">{tab.title}</span>
+    </div>
     <div
-      className={`
-            absolute w-full h-screen flex items-center justify-center p-8
-            transition-opacity duration-1000 ease-in-out
-            ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-          `}
-    >
-      <div className="relative z-10 max-w-6xl w-full text-center p-8">
-        <div className="space-y-8">
-          {children}
+      className={`absolute inset-0 rounded-xl bg-gradient-to-r ${tab.colorClass} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
+    />
+  </button>
+));
+
+const FeatureContent = memo(({ tab, isActive }) => (
+  <div
+    className={`
+      absolute w-full px-6 sm:px-8 py-10 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]
+      ${isActive ? 'opacity-100 translate-x-0 animate-fadeInUp' : 'opacity-0 translate-x-12 pointer-events-none'}
+    `}
+  >
+    <div className="flex flex-col md:flex-row items-center gap-8 max-w-5xl mx-auto">
+      <img
+        src={tab.image}
+        alt={tab.title}
+        className="w-full md:w-1/2 h-72 object-cover rounded-lg shadow-lg"
+      />
+      <div className="text-center md:text-left">
+        <h3
+          className={`text-3xl sm:text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r ${tab.colorClass}`}
+        >
+          {tab.title}
+        </h3>
+        <p className="text-xl sm:text-2xl text-gray-200 max-w-lg mx-auto md:mx-0">
+          {tab.description}
+        </p>
+      </div>
+    </div>
+  </div>
+));
+
+const SiderFeatureTabs = () => {
+  const [activeTab, setActiveTab] = useState(0);
+  const tabs = [
+    {
+      number: 1,
+      title: "AI Chat Đa Năng",
+      description: "Tương tác với chatbot AI thông minh, giải đáp mọi thắc mắc, hỗ trợ sáng tạo nội dung và học tập 24/7.",
+      icon: <FaRobot />,
+      colorClass: 'from-pink-500 to-purple-600',
+      image: 'https://via.placeholder.com/400x250?text=AI+Chat',
+    },
+    {
+      number: 2,
+      title: "Dịch PDF Chuyên Nghiệp",
+      description: "Dịch tài liệu PDF sang hơn 100 ngôn ngữ với độ chính xác cao, giữ nguyên định dạng và bố cục.",
+      icon: <FaFilePdf />,
+      colorClass: 'from-purple-500 to-pink-600',
+      image: 'https://via.placeholder.com/400x250?text=PDF+Translation',
+    },
+    {
+      number: 3,
+      title: "Tóm Tắt & Phân Tích PDF",
+      description: "Trích xuất thông tin quan trọng, tóm tắt nội dung dài và trả lời câu hỏi từ PDF nhanh chóng.",
+      icon: <FaSearchPlus />,
+      colorClass: 'from-pink-400 to-purple-700',
+      image: 'https://via.placeholder.com/400x250?text=PDF+Analysis',
+    },
+  ];
+
+  return (
+    <div className="relative bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 max-w-6xl mx-auto">
+      <div className="absolute top-0 left-0 w-48 h-48 bg-pink-500 opacity-10 rounded-full filter blur-3xl -translate-x-1/4 -translate-y-1/4"></div>
+      <div className="absolute bottom-0 right-0 w-48 h-48 bg-purple-500 opacity-10 rounded-full filter blur-3xl translate-x-1/4 translate-y-1/4"></div>
+      <div className="relative flex flex-col gap-6">
+        <div className="flex justify-center gap-4">
+          {tabs.map((tab, index) => (
+            <FeatureTab
+              key={index}
+              tab={tab}
+              isActive={activeTab === index}
+              onClick={() => setActiveTab(index)}
+            />
+          ))}
+        </div>
+        <div className="relative min-h-[450px]">
+          {tabs.map((tab, index) => (
+            <FeatureContent key={index} tab={tab} isActive={activeTab === index} />
+          ))}
         </div>
       </div>
     </div>
   );
 };
 
-const FeatureTab = ({ tab, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`
-          relative h-16 w-16 md:h-20 md:w-20 rounded-full flex items-center justify-center
-          transition-all duration-400 ease-[cubic-bezier(0.33,1,0.68,1)] cursor-pointer
-          ${isActive
-        ? `bg-gradient-to-br ${tab.colorClass} shadow-xl ring-4 ring-white/30 scale-110`
-        : 'bg-gray-800/70 hover:bg-gray-700/80 text-gray-200 hover:text-white hover:scale-105'}
-          group focus:outline-none focus:ring-2 focus:ring-white/40
-        `}
-  >
-    <span className={`text-2xl md:text-3xl font-extrabold ${isActive ? 'text-white' : 'text-gray-200 group-hover:text-white'}`}>
-      {tab.number}
-    </span>
-    <div className={`absolute inset-0 rounded-full opacity-0 group-hover:opacity-25 transition-opacity duration-400 bg-gradient-to-br ${tab.colorClass}`}></div>
-  </button>
-);
+const TypewriterText = memo(({ text, isActive, className, delay = 0 }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-const FeatureContent = ({ tab, isActive }) => (
-  <div
-    className={`
-          absolute w-full px-6 py-8 transition-all duration-600 ease-[cubic-bezier(0.33,1,0.68,1)]
-          text-white text-center
-          ${isActive ? 'opacity-100 translate-y-0 relative' : 'opacity-0 translate-y-10 pointer-events-none absolute'}
-        `}
-  >
-    <div className="flex flex-col items-center justify-center">
-      <div
-        className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-gradient-to-br ${tab.colorClass} shadow-xl`}
-      >
-        {React.cloneElement(tab.icon, { className: 'h-10 w-10 text-white' })}
-      </div>
-      <h3 className={`text-3xl md:text-4xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r ${tab.colorClass.replace('bg-gradient-to-br', '')}`}>
-        {tab.title}
-      </h3>
-      <p className="text-lg md:text-xl leading-relaxed text-gray-100 max-w-2xl mx-auto">
-        {tab.description}
-      </p>
-    </div>
-  </div>
-);
-
-const SiderFeatureTabs = () => {
-  const [activeTab, setActiveTab] = React.useState(0);
-
-  const tabs = [
-    {
-      number: 1,
-      title: "Trò Chuyện AI Đa Năng",
-      description: "Giải đáp mọi thắc mắc, viết nội dung sáng tạo, và hỗ trợ học tập với chatbot AI thông minh của Sider. Luôn sẵn sàng phục vụ bạn 24/7.",
-      icon: <FaRobot />,
-      colorClass: 'from-pink-400 to-purple-400',
-    },
-    {
-      number: 2,
-      title: "Dịch PDF Chuẩn Xác",
-      description: "Dịch tài liệu PDF sang hơn 100 ngôn ngữ, giữ nguyên định dạng, bố cục và hình ảnh. Phá vỡ rào cản ngôn ngữ trong nghiên cứu và công việc.",
-      icon: <FaFilePdf />,
-      colorClass: 'from-purple-400 to-blue-400',
-    },
-    {
-      number: 3,
-      title: "Phân Tích & Tóm Tắt PDF",
-      description: "Trích xuất thông tin quan trọng, tóm tắt nội dung dài, và trả lời câu hỏi trực tiếp từ tài liệu PDF. Tiết kiệm thời gian đọc và tăng cường hiểu biết.",
-      icon: <FaSearchPlus />,
-      colorClass: 'from-blue-400 to-pink-400',
-    },
-  ];
-
-  return (
-    <div className="relative flex flex-col md:flex-row bg-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 p-8 max-w-6xl mx-auto">
-      <div className="absolute top-0 left-0 w-64 h-64 bg-pink-400 opacity-20 rounded-full filter blur-3xl -translate-x-1/3 -translate-y-1/3"></div>
-      <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-400 opacity-20 rounded-full filter blur-3xl translate-x-1/3 translate-y-1/3"></div>
-      <div className="relative z-10 flex md:flex-col justify-center md:justify-start space-x-6 md:space-x-0 md:space-y-8 p-6 md:pr-12 md:border-r border-white/20 flex-shrink-0">
-        {tabs.map((tab, index) => (
-          <FeatureTab key={index} tab={tab} isActive={activeTab === index} onClick={() => setActiveTab(index)} />
-        ))}
-      </div>
-      <div className="relative z-10 flex-1 p-8 min-h-[360px] flex items-center justify-center overflow-hidden">
-        {tabs.map((tab, index) => (
-          <FeatureContent key={index} tab={tab} isActive={activeTab === index} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const TypewriterText = ({ text, isActive, className, delay = 0 }) => {
-  const [displayedText, setDisplayedText] = React.useState('');
-  const [currentIndex, setCurrentIndex] = React.useState(0);
-  const [isDeleting, setIsDeleting] = React.useState(false);
-
-  React.useEffect(() => {
-    let timeout;
-    let interval;
-
+  useEffect(() => {
+    let timeout, interval;
     if (isActive) {
       timeout = setTimeout(() => {
         interval = setInterval(() => {
@@ -127,71 +137,58 @@ const TypewriterText = ({ text, isActive, className, delay = 0 }) => {
             if (prev < text.length) {
               setDisplayedText(text.slice(0, prev + 1));
               return prev + 1;
-            } else {
-              clearInterval(interval);
-              return prev;
             }
+            clearInterval(interval);
+            return prev;
           });
         }, 40);
       }, delay * 1000);
-    } else if (!isActive && displayedText.length > 0) {
-      setIsDeleting(true);
+    } else if (displayedText.length > 0) {
       interval = setInterval(() => {
         setCurrentIndex((prev) => {
           if (prev > 0) {
             setDisplayedText(text.slice(0, prev - 1));
             return prev - 1;
-          } else {
-            setIsDeleting(false);
-            clearInterval(interval);
-            return 0;
           }
+          clearInterval(interval);
+          return 0;
         });
-      }, 50);
+      }, 20);
     }
-
     return () => {
       clearTimeout(timeout);
       clearInterval(interval);
     };
   }, [isActive, text, delay]);
 
-  return (
-    <span className={`${className} transition-opacity duration-300`}>
-      {displayedText}
-    </span>
-  );
-};
+  return <span className={className}>{displayedText}</span>;
+});
 
 const SparkleBackground = () => {
-  const canvasRef = React.useRef(null);
+  const canvasRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const particles = [];
-    const particleCount = 100;
-
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.5 + 0.2,
-        twinkleSpeed: Math.random() * 0.02 + 0.01,
-        phase: Math.random() * Math.PI * 2,
-      });
-    }
+    const particles = Array.from({ length: 80 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 1,
+      opacity: Math.random() * 0.4 + 0.2,
+      twinkleSpeed: Math.random() * 0.02 + 0.01,
+      phase: Math.random() * Math.PI * 2,
+    }));
 
     let animationFrameId;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(particle => {
-        const opacity = particle.opacity + Math.sin(particle.phase + performance.now() * particle.twinkleSpeed) * 0.3;
-        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, Math.min(0.8, opacity))})`;
+      particles.forEach((particle) => {
+        const opacity =
+          particle.opacity + Math.sin(particle.phase + performance.now() * particle.twinkleSpeed) * 0.2;
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, Math.min(0.7, opacity))})`;
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -207,157 +204,149 @@ const SparkleBackground = () => {
 };
 
 const FullScreenZoomScroll = () => {
-  const [currentSection, setCurrentSection] = React.useState(0);
-  const containerRef = React.useRef();
-  const isScrolling = React.useRef(false);
-  const isCapturingScroll = React.useRef(true);
-  const accumulatedDelta = React.useRef(0);
-  const lastScrollTime = React.useRef(0);
-  const animationFrameId = React.useRef(null);
+  const [currentSection, setCurrentSection] = useState(0);
+  const containerRef = useRef();
+  const sectionRefs = useRef([]);
+  const isScrolling = useRef(false);
+  const isCapturingScroll = useRef(true);
+  const lastScrollTime = useRef(0);
 
   const sections = [
     {
       content: (
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-6xl font-extrabold mb-8 leading-tight">
+        <div className="max-w-5xl mx-auto text-center px-6 sm:px-8">
+          <h2 className="text-5xl sm:text-6xl md:text-7xl font-extrabold mb-12 leading-tight">
             <TypewriterText
-              text="Chào Mừng Đến Với Sider AI"
+              text="Khám Phá Sider AI"
               isActive={currentSection === 0}
-              className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"
+              className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500"
             />
           </h2>
-          <p className="text-xl md:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed font-medium">
+          <p className="text-xl sm:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed mb-10 px-4">
             <TypewriterText
-              text="Khám phá sức mạnh của trí tuệ nhân tạo trong việc xử lý ngôn ngữ và tài liệu. Trải nghiệm sự khác biệt ngay hôm nay!"
+              text="Trải nghiệm sức mạnh của AI trong giao tiếp và xử lý tài liệu với công nghệ tiên tiến."
               isActive={currentSection === 0}
-              delay={0.4}
+              delay={0.3}
             />
           </p>
         </div>
-      )
+      ),
     },
     {
       content: (
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-6xl font-extrabold mb-8 leading-tight">
+        <div className="max-w-5xl mx-auto text-center px-6 sm:px-8">
+          <h2 className="text-5xl sm:text-6xl md:text-7xl font-extrabold mb-12 leading-tight">
             <TypewriterText
-              text="Tăng Cường Hiệu Suất"
+              text="Tối Ưu Hóa Công Việc"
               isActive={currentSection === 1}
-              className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400"
+              className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500"
             />
           </h2>
-          <p className="text-xl md:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed font-medium">
+          <p className="text-xl sm:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed mb-10 px-4">
             <TypewriterText
-              text="Sider AI mang đến các giải pháp thông minh để tối ưu hóa công việc cá nhân và doanh nghiệp của bạn."
+              text="Sider AI giúp bạn làm việc hiệu quả hơn với các giải pháp thông minh, sáng tạo."
               isActive={currentSection === 1}
-              delay={0.4}
+              delay={0.3}
             />
           </p>
         </div>
-      )
+      ),
     },
     {
-      content: <SiderFeatureTabs />
+      content: <SiderFeatureTabs />,
     },
     {
       content: (
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-6xl font-extrabold mb-8 leading-tight">
+        <div className="max-w-5xl mx-auto text-center px-6 sm:px-8">
+          <h2 className="text-5xl sm:text-6xl md:text-7xl font-extrabold mb-12 leading-tight">
             <TypewriterText
-              text="Sẵn Sàng Trải Nghiệm?"
+              text="Bắt Đầu Hành Trình AI"
               isActive={currentSection === 3}
-              className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400"
+              className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500"
             />
           </h2>
-          <p className="text-xl md:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed font-medium">
+          <p className="text-xl sm:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed mb-10 px-4">
             <TypewriterText
-              text="Tham gia Sider AI để khám phá tiềm năng vô hạn của trí tuệ nhân tạo ngay hôm nay!"
+              text="Tham gia ngay để khám phá tiềm năng vô hạn của trí tuệ nhân tạo với Sider!"
               isActive={currentSection === 3}
-              delay={0.4}
+              delay={0.3}
             />
           </p>
-          <button className="mt-10 px-8 py-4 rounded-full bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <button className="mt-6 px-12 py-5 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-xl shadow-lg hover:shadow-2xl hover:scale-110 transition-all duration-300">
             Dùng Thử Miễn Phí
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
-  const smoothScroll = () => {
-    if (Math.abs(accumulatedDelta.current) > 0) {
-      const friction = 0.9; // Damping factor for smooth deceleration
-      const scrollAmount = accumulatedDelta.current * 0.1; // Scroll speed factor
-      window.scrollBy(0, scrollAmount);
-      accumulatedDelta.current *= friction;
-
-      if (Math.abs(accumulatedDelta.current) < 1) {
-        accumulatedDelta.current = 0;
-      }
-      animationFrameId.current = requestAnimationFrame(smoothScroll);
-    } else {
-      cancelAnimationFrame(animationFrameId.current);
-    }
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     const handleWheel = (e) => {
       const currentTime = performance.now();
-      if (currentTime - lastScrollTime.current < 50) return; // Debounce wheel events
+      if (currentTime - lastScrollTime.current < 50) return;
       lastScrollTime.current = currentTime;
 
-      if (isCapturingScroll.current) {
+      if (isCapturingScroll.current && !isScrolling.current) {
         e.preventDefault();
-        if (!isScrolling.current) {
-          isScrolling.current = true;
-          const direction = e.deltaY > 0 ? 1 : -1;
+        isScrolling.current = true;
+        const direction = e.deltaY > 0 ? 1 : -1;
+        const sectionElement = sectionRefs.current[currentSection];
 
-          setCurrentSection(prev => {
-            const newSection = prev + direction;
+        if (sectionElement) {
+          const { scrollTop, scrollHeight, clientHeight } = sectionElement;
+          const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5;
+          const isAtTop = scrollTop <= 5;
 
-            if (newSection > sections.length - 1 && direction > 0) {
-              isCapturingScroll.current = false;
-              accumulatedDelta.current += e.deltaY;
-              animationFrameId.current = requestAnimationFrame(smoothScroll);
-              return prev;
-            }
-
-            if (newSection < 0 && direction < 0) {
-              isCapturingScroll.current = false;
-              accumulatedDelta.current += e.deltaY;
-              animationFrameId.current = requestAnimationFrame(smoothScroll);
-              return prev;
-            }
-
-            return Math.min(Math.max(newSection, 0), sections.length - 1);
-          });
-
-          setTimeout(() => {
+          if (direction > 0 && !isAtBottom) {
+            // Scroll down within the current section if not at the bottom
             isScrolling.current = false;
-          }, 1000);
+            return;
+          } else if (direction < 0 && !isAtTop) {
+            // Scroll up within the current section if not at the top
+            isScrolling.current = false;
+            return;
+          }
         }
-      } else {
-        accumulatedDelta.current += e.deltaY;
-        if (!animationFrameId.current) {
-          animationFrameId.current = requestAnimationFrame(smoothScroll);
-        }
+
+        setCurrentSection((prev) => {
+          const newSection = prev + direction;
+          if (newSection >= 0 && newSection < sections.length) {
+            // Reset scroll position of the new section
+            if (sectionRefs.current[newSection]) {
+              sectionRefs.current[newSection].scrollTop = 0;
+            }
+            // Chỉ cho phép cuộn xuống nội dung bên dưới nếu đang ở section cuối và đã cuộn đến cuối nội dung
+            if (newSection === sections.length - 1 && direction > 0 && sectionElement?.scrollTop + sectionElement?.clientHeight >= sectionElement?.scrollHeight - 5) {
+              isCapturingScroll.current = false;
+            }
+            return newSection;
+          }
+          // Nếu đang ở section cuối và cuộn xuống, cho phép cuộn xuống nội dung bên dưới
+          if (prev === sections.length - 1 && direction > 0 && sectionElement?.scrollTop + sectionElement?.clientHeight >= sectionElement?.scrollHeight - 5) {
+            isCapturingScroll.current = false;
+          }
+          // Nếu cuộn lên từ section 0, giữ nguyên logic
+          if (newSection < 0) {
+            return prev;
+          }
+          return prev;
+        });
+
+        setTimeout(() => {
+          isScrolling.current = false;
+        }, 800);
       }
     };
 
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
+      // Nếu cuộn ngược lại lên đầu và không còn capturing scroll, bật lại capturing
       if (scrollPosition <= 0 && !isCapturingScroll.current) {
         isCapturingScroll.current = true;
         setCurrentSection(0);
-        accumulatedDelta.current = 0;
-        cancelAnimationFrame(animationFrameId.current);
-      }
-      if (scrollPosition < window.innerHeight && scrollPosition > 0 && !isCapturingScroll.current) {
-        isCapturingScroll.current = true;
-        setCurrentSection(sections.length - 1);
-        window.scrollTo({ top: 0 });
-        accumulatedDelta.current = 0;
-        cancelAnimationFrame(animationFrameId.current);
+        if (sectionRefs.current[0]) {
+          sectionRefs.current[0].scrollTop = 0;
+        }
       }
     };
 
@@ -365,29 +354,31 @@ const FullScreenZoomScroll = () => {
     container.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('scroll', handleScroll);
 
+    // Initialize refs for sections
+    sectionRefs.current = sections.map(() => sectionRefs.current[sections.indexOf(sections[0])] || null);
+
     return () => {
       container.removeEventListener('wheel', handleWheel);
       window.removeEventListener('scroll', handleScroll);
-      cancelAnimationFrame(animationFrameId.current);
     };
   }, [sections.length]);
 
   return (
     <div
       ref={containerRef}
-      className="relative h-screen bg-gray-900 font-sans text-white"
+      className="relative h-screen bg-gray-900 font-sans text-white overflow-hidden"
       style={{ top: 0, position: 'sticky' }}
     >
       <div
-        className="absolute inset-0 bg-gradient-to-br from-pink-300 to-blue-500 opacity-80"
-        style={{ backgroundSize: '200% 200%' }}
+        className="absolute inset-0 bg-gradient-to-br from-pink-400 to-purple-600 opacity-80 animate-gradient"
       ></div>
-      <div className="absolute inset-0 bg-black opacity-20"></div>
+      <div className="absolute inset-0 bg-black opacity-10"></div>
       <SparkleBackground />
       {sections.map((section, index) => (
         <ZoomScrollSection
           key={index}
           isActive={currentSection === index}
+          innerRef={(el) => (sectionRefs.current[index] = el)}
         >
           {section.content}
         </ZoomScrollSection>
@@ -396,22 +387,20 @@ const FullScreenZoomScroll = () => {
   );
 };
 
-const App = () => {
-  return (
-    <div>
-      <FullScreenZoomScroll />
-      <div className="min-h-screen bg-gray-800 text-white flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-4xl font-bold mb-4">Sider: Đột Phá Công Nghệ AI</h2>
-          <p className="text-xl max-w-2xl mx-auto">
-            Sider AI mang đến trải nghiệm giao tiếp và dịch thuật vượt trội, kết nối trí thức toàn cầu với công nghệ tiên tiến.
-          </p>
-        </div>
+const App = () => (
+  <div>
+    <FullScreenZoomScroll />
+    <div className="min-h-screen bg-gray-800 text-white flex items-center justify-center">
+      <div className="text-center px-6">
+        <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500">
+          Sider: Đột Phá Công Nghệ AI
+        </h2>
+        <p className="text-xl sm:text-2xl max-w-3xl mx-auto">
+          Kết nối trí thức toàn cầu với các giải pháp AI tiên tiến, từ giao tiếp đến xử lý tài liệu.
+        </p>
       </div>
     </div>
-  );
-};
-
-
+  </div>
+);
 
 export default FullScreenZoomScroll;
